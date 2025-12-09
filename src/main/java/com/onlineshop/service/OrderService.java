@@ -196,6 +196,20 @@ public class OrderService {
     public List<Object[]> getTopSellingProducts(LocalDateTime startDate, LocalDateTime endDate) {
         return orderRepository.getTopSellingProducts(startDate, endDate);
     }
+    /**
+     * 獲取所有訂單
+     */
+    public List<Order> getAllOrders() {
+        return orderRepository.findAll();
+    }
+    
+    /**
+     * 根據狀態獲取訂單
+     */
+    public List<Order> getOrdersByStatus(Order.OrderStatus status) {
+        return orderRepository.findByStatus(status);
+    }
+    
     
     /**
      * 發送訂單確認郵件

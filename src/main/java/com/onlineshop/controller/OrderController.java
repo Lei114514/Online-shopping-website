@@ -197,15 +197,4 @@ public class OrderController {
         User user = userService.getUserByUsername(username);
         return user.getId();
     }
-    
-    // 這些方法需要在OrderService中添加
-    private List<Order> getAllOrders() {
-        // 實現獲取所有訂單的邏輯
-        return List.of();
-    }
-    
-    private List<Order> getOrdersByStatus(Order.OrderStatus status) {
-        // 實現根據狀態獲取訂單的邏輯
-        return List.of();
-    }
 }
