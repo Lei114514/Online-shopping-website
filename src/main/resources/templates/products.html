@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>商品列表 - 線上購物系統</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <!-- 搜索和篩選 -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form th:action="@{/products}" method="get" class="row g-3">
+                    <div class="col-md-8">
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="search" 
+                                   th:value="${searchQuery}" placeholder="搜索商品...">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-search"></i> 搜索
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <select class="form-select" name="categoryId">
+                            <option value="">所有分類</option>
+                            <!-- 這裡可以動態加載分類 -->
+                            <option value="1">電子產品</option>
+                            <option value="2">服裝</option>
+                            <option value="3">書籍</option>
+                            <option value="4">家居用品</option>
+                            <option value="5">食品飲料</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- 商品列表 -->
+        <div class="row">
+            <div th:each="product : ${products}" class="col-md-4 col-lg-3 mb-4">
+                <div class="card h-100 product-card">
+                    <div class="position-relative">
+                        <img th:src="${product.imageUrl != null ? product.imageUrl : 'https://via.placeholder.com/300x200'}" 
+                             class="card-img-top" alt="商品圖片" style="height: 200px; object-fit: cover;">
+                        <div class="position-absolute top-0 end-0 m-2">
+                            <span th:if="${product.stockQuantity <= 10 && product.stockQuantity > 0}" 
+                                  class="badge bg-warning">庫存緊張</span>
+                            <span th:if="${product.stockQuantity <= 0}" 
+                                  class="badge bg-danger">缺貨</span>
+                        </div>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title" th:text="${product.name}">商品名稱</h5>
+                        <p class="card-text text-muted small flex-grow-1" 
+                           th:text="${product.description?.length() > 80 ? product.description.substring(0, 80) + '...' : product.description}">
+                            商品描述
+                        </p>
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="h5 text-primary" th:text="'$' + ${product.price}">$0.00</span>
+                                <small class="text-muted" th:text="'庫存: ' + ${product.stockQuantity}">庫存: 0</small>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <a th:href="@{/products/} + ${product.id}" class="btn btn-outline-primary">
+                                    <i class="fas fa-eye me-1"></i>查看詳情
+                                </a>
+                                <form th:action="@{/cart/add}" method="post" th:if="${product.stockQuantity > 0}">
+                                    <input type="hidden" name="productId" th:value="${product.id}">
+                                    <input type="hidden" name="quantity" value="1">
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="fas fa-cart-plus me-1"></i>加入購物車
+                                    </button>
+                                </form>
+                                <button th:if="${product.stockQuantity <= 0}" 
+                                        class="btn btn-secondary w-100" disabled>
+                                    已售罄
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 沒有商品時顯示 -->
+        <div th:if="${products.empty}" class="text-center py-5">
+            <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
+            <h4 class="text-muted">沒有找到商品</h4>
+            <p class="text-muted">嘗試其他搜索條件或分類</p>
+        </div>
+    </div>
+</body>
+</html>

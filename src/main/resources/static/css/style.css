@@ -1,0 +1,153 @@
+/* 線上購物系統樣式表 */
+
+/* 全局樣式 */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+/* 導航欄樣式 */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+}
+
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+/* 卡片樣式 */
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,.075);
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15);
+}
+
+.product-card {
+    height: 100%;
+}
+
+.product-card .card-img-top {
+    height: 200px;
+    object-fit: cover;
+}
+
+/* 按鈕樣式 */
+.btn {
+    border-radius: 0.375rem;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+}
+
+/* 表單樣式 */
+.form-control:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13,110,253,.25);
+}
+
+/* 英雄區域 */
+.hero-section {
+    background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
+    border-radius: 0.5rem;
+}
+
+/* 表格樣式 */
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(13,110,253,.05);
+}
+
+/* 徽章樣式 */
+.badge {
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+}
+
+/* 頁腳樣式 */
+footer {
+    margin-top: auto;
+}
+
+footer a {
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
+
+/* 響應式調整 */
+@media (max-width: 768px) {
+    .hero-section .display-4 {
+        font-size: 2rem;
+    }
+    
+    .hero-section .lead {
+        font-size: 1rem;
+    }
+}
+
+/* 自定義工具類 */
+.text-shadow {
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+}
+
+/* 動畫效果 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* 加載動畫 */
+.spinner {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* 價格樣式 */
+.price {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+}
+
+/* 庫存狀態 */
+.in-stock {
+    color: #198754;
+}
+
+.low-stock {
+    color: #ffc107;
+}
+
+.out-of-stock {
+    color: #dc3545;
+}

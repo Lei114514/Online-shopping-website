@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>首頁 - 線上購物系統</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <!-- 英雄區域 -->
+        <div class="hero-section bg-primary text-white py-5 mb-5">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-lg-6">
+                        <h1 class="display-4 fw-bold mb-3">歡迎來到線上購物系統</h1>
+                        <p class="lead mb-4">發現優質商品，享受便捷購物體驗</p>
+                        <a th:href="@{/products}" class="btn btn-light btn-lg">
+                            <i class="fas fa-shopping-bag me-2"></i>立即購物
+                        </a>
+                    </div>
+                    <div class="col-lg-6">
+                        <img src="https://via.placeholder.com/600x400" alt="購物" class="img-fluid rounded">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 特色商品 -->
+        <div class="container">
+            <h2 class="text-center mb-5">熱銷商品</h2>
+            <div class="row">
+                <div class="col-md-4 mb-4" th:each="product : ${topProducts}">
+                    <div class="card h-100">
+                        <img th:src="${product.imageUrl != null ? product.imageUrl : 'https://via.placeholder.com/300x200'}" 
+                             class="card-img-top" alt="商品圖片">
+                        <div class="card-body">
+                            <h5 class="card-title" th:text="${product.name}">商品名稱</h5>
+                            <p class="card-text text-muted" th:text="${product.description?.length() > 100 ? product.description.substring(0, 100) + '...' : product.description}">
+                                商品描述
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="h4 text-primary" th:text="'$' + ${product.price}">$0.00</span>
+                                <a th:href="@{/products/} + ${product.id}" class="btn btn-outline-primary">
+                                    查看詳情
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <small class="text-muted">
+                                <span th:if="${product.stockQuantity > 0}" class="text-success">
+                                    <i class="fas fa-check-circle"></i> 有庫存
+                                </span>
+                                <span th:if="${product.stockQuantity <= 0}" class="text-danger">
+                                    <i class="fas fa-times-circle"></i> 缺貨
+                                </span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 特色服務 -->
+        <div class="bg-light py-5 mt-5">
+            <div class="container">
+                <h2 class="text-center mb-5">我們的服務</h2>
+                <div class="row text-center">
+                    <div class="col-md-4 mb-4">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-shipping-fast fa-3x text-primary"></i>
+                        </div>
+                        <h4>快速配送</h4>
+                        <p class="text-muted">全台快速配送，確保商品及時送達</p>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-shield-alt fa-3x text-primary"></i>
+                        </div>
+                        <h4>安全支付</h4>
+                        <p class="text-muted">多種安全支付方式，保障交易安全</p>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-headset fa-3x text-primary"></i>
+                        </div>
+                        <h4>客戶服務</h4>
+                        <p class="text-muted">24/7客戶服務，隨時為您解答問題</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

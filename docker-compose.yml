@@ -1,0 +1,51 @@
+                           version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: online-shop-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: online_shop_db
+      MYSQL_USER: onlineshop
+      MYSQL_PASSWORD: onlineshop123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docs/database-schema.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - online-shop-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  app:
+    build: .
+    container_name: online-shop-app
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/online_shop_db?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: onlineshop
+      SPRING_DATASOURCE_PASSWORD: onlineshop123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    ports:
+      - "8080:8080"
+    volumes:
+      - uploads:/app/uploads
+    networks:
+      - online-shop-network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+    driver: local
+  uploads:
+    driver: local
+
+networks:
+  online-shop-network:
+    driver: bridge

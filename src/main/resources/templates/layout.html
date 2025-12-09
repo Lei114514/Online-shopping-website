@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} + ' - 線上購物系統'">線上購物系統</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- 自定義CSS -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <!-- 導航欄 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" th:href="@{/}">
+                <i class="fas fa-shopping-cart"></i> 線上購物
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/}" th:classappend="${#httpServletRequest.requestURI == '/' ? 'active' : ''}">
+                            <i class="fas fa-home"></i> 首頁
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/products}" th:classappend="${#httpServletRequest.requestURI.startsWith('/products') ? 'active' : ''}">
+                            <i class="fas fa-store"></i> 商品
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/about}">
+                            <i class="fas fa-info-circle"></i> 關於我們
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/contact}">
+                            <i class="fas fa-envelope"></i> 聯繫我們
+                        </a>
+                    </li>
+                    
+                    <!-- 銷售端導航 -->
+                    <li class="nav-item" sec:authorize="hasRole('SALES')">
+                        <a class="nav-link" th:href="@{/orders/sales}">
+                            <i class="fas fa-clipboard-list"></i> 訂單管理
+                        </a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('SALES')">
+                        <a class="nav-link" th:href="@{/admin/products}">
+                            <i class="fas fa-boxes"></i> 商品管理
+                        </a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('SALES')">
+                        <a class="nav-link" th:href="@{/orders/sales/statistics}">
+                            <i class="fas fa-chart-line"></i> 銷售統計
+                        </a>
+                    </li>
+                    
+                    <!-- 管理員導航 -->
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a class="nav-link" th:href="@{/users/admin}">
+                            <i class="fas fa-users"></i> 用戶管理
+                        </a>
+                    </li>
+                </ul>
+                
+                <ul class="navbar-nav">
+                    <!-- 購物車 -->
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a class="nav-link position-relative" th:href="@{/cart}">
+                            <i class="fas fa-shopping-cart"></i> 購物車
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" 
+                                  th:text="${#authentication.principal != null ? cartItemCount : 0}">0</span>
+                        </a>
+                    </li>
+                    
+                    <!-- 用戶相關 -->
+                    <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" 
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user"></i>
+                            <span sec:authentication="name">用戶</span>
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="userDropdown">
+                            <li>
+                                <a class="dropdown-item" th:href="@{/users/profile}">
+                                    <i class="fas fa-user-circle"></i> 個人資料
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" th:href="@{/orders}">
+                                    <i class="fas fa-receipt"></i> 我的訂單
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form th:action="@{/logout}" method="post">
+                                    <button class="dropdown-item" type="submit">
+                                        <i class="fas fa-sign-out-alt"></i> 登出
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    <!-- 登錄/註冊 -->
+                    <li class="nav-item" sec:authorize="!isAuthenticated()">
+                        <a class="nav-link" th:href="@{/login}">
+                            <i class="fas fa-sign-in-alt"></i> 登錄
+                        </a>
+                    </li>
+                    <li class="nav-item" sec:authorize="!isAuthenticated()">
+                        <a class="nav-link" th:href="@{/register}">
+                            <i class="fas fa-user-plus"></i> 註冊
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- 主內容 -->
+    <main class="container my-4">
+        <!-- 消息提示 -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        
+        <!-- 頁面內容 -->
+        <div th:replace="${content}">
+            <!-- 這裡會被具體頁面內容替換 -->
+        </div>
+    </main>
+    
+    <!-- 頁腳 -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>關於我們</h5>
+                    <p>提供優質商品和服務的線上購物平台。</p>
+                </div>
+                <div class="col-md-4">
+                    <h5>快速鏈接</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white">首頁</a></li>
+                        <li><a href="#" class="text-white">商品</a></li>
+                        <li><a href="#" class="text-white">關於我們</a></li>
+                        <li><a href="#" class="text-white">聯繫我們</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5>聯繫我們</h5>
+                    <p><i class="fas fa-envelope"></i> support@onlineshop.com</p>
+                    <p><i class="fas fa-phone"></i> +886 2 1234 5678</p>
+                </div>
+            </div>
+            <hr class="bg-light">
+            <div class="text-center">
+                <p>&copy; 2024 線上購物系統. 版權所有.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- 自定義JS -->
+    <script th:src="@{/js/main.js}"></script>
+</body>
+</html>
