@@ -3,12 +3,12 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
 <head>
-    <title>註冊 - 線上購物系統</title>
+    <title>用戶註冊 - 線上購物系統</title>
 </head>
 <body>
     <div layout:fragment="content">
         <div class="row justify-content-center">
-            <div class="col-md-8 col-lg-6">
+            <div class="col-md-8col-lg-6">
                 <div class="card shadow">
                     <div class="card-header bg-primary text-white text-center py-3">
                         <h4 class="mb-0">
@@ -16,98 +16,151 @@
                         </h4>
                     </div>
                     <div class="card-body p-4">
+                        <!-- 錯誤消息 -->
+                        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i><span th:text="${errorMessage}"></span>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        
                         <!-- 註冊表單 -->
-                        <form th:action="@{/users/register}" method="post" th:object="${user}">
+                        <form th:action="@{/register}" th:object="${user}" method="post">
                             <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="firstName" class="form-label">名字</label>
-                                    <input type="text" class="form-control" id="firstName" 
-                                           th:field="*{firstName}" required>
-                                    <div class="invalid-feedback">請輸入名字</div>
+                                <!-- 用戶名 -->
+                                <div class="col-md-12 mb-3">
+                                    <label for="username" class="form-label">
+                                        <i class="fas fa-user me-1"></i>用戶名<span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="username" th:field="*{username}" 
+                                           required autofocus placeholder="請輸入用戶名">
+                                    <small class="form-text text-muted">用戶名用於登錄,不可重複</small>
                                 </div>
                                 
+                                <!-- 電子郵件 -->
+                                <div class="col-md-12 mb-3">
+                                    <label for="email" class="form-label">
+                                        <i class="fas fa-envelope me-1"></i>電子郵件<span class="text-danger">*</span>
+                                    </label>
+                                    <input type="email" class="form-control" id="email" th:field="*{email}" 
+                                           required placeholder="請輸入電子郵件">
+                                </div>
+                                
+                                <!-- 密碼 -->
                                 <div class="col-md-6 mb-3">
-                                    <label for="lastName" class="form-label">姓氏</label>
-                                    <input type="text" class="form-control" id="lastName" 
-                                           th:field="*{lastName}" required>
-                                    <div class="invalid-feedback">請輸入姓氏</div>
+                                    <label for="password" class="form-label">
+                                        <i class="fas fa-lock me-1"></i>密碼<span class="text-danger">*</span>
+                                    </label>
+                                    <input type="password" class="form-control" id="password" th:field="*{password}" 
+                                           required placeholder="請輸入密碼">
+                                </div>
+                                
+                                <!-- 確認密碼 -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="confirmPassword" class="form-label">
+                                        <i class="fas fa-lock me-1"></i>確認密碼<span class="text-danger">*</span>
+                                    </label>
+                                    <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" 
+                                           required placeholder="請再次輸入密碼">
+                                </div>
+<!-- 用戶身份選擇 -->
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-user-tag me-1"></i>選擇身份<span class="text-danger">*</span>
+                                    </label>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-check p-3border rounded">
+                                                <input class="form-check-input" type="radio" name="role" id="roleCustomer" 
+                                                       value="CUSTOMER" checked>
+                                                <label class="form-check-label w-100" for="roleCustomer">
+                                                    <strong><i class="fas fa-shopping-cart me-2"></i>普通用戶</strong><p class="text-muted small mb-0">可以瀏覽商品、購物、下訂單</p>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check p-3 border rounded">
+                                                <input class="form-check-input" type="radio" name="role" id="roleSales" 
+                                                       value="SALES">
+                                                <label class="form-check-label w-100" for="roleSales">
+                                                    <strong><i class="fas fa-store me-2"></i>商家</strong>
+                                                    <p class="text-muted small mb-0">可以發布和管理自己的商品</p>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                
+                                <hr class="my-3">
+                                
+                                <!--姓 -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="lastName" class="form-label">
+                                        <i class="fas fa-id-card me-1"></i>姓<span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="lastName" th:field="*{lastName}" 
+                                           required placeholder="請輸入姓">
+                                </div>
+                                
+                                <!-- 名 -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="firstName" class="form-label">
+                                        <i class="fas fa-id-card me-1"></i>名<span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="firstName" th:field="*{firstName}" 
+                                           required placeholder="請輸入名">
+                                </div>
+                                
+                                <!-- 電話 (可選) -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="phone" class="form-label">
+                                        <i class="fas fa-phone me-1"></i>電話
+                                    </label>
+                                    <input type="tel" class="form-control" id="phone" th:field="*{phone}" 
+                                           placeholder="請輸入電話號碼(選填)">
+                                </div>
+                                
+                                <!-- 地址 (可選) -->
+                                <div class="col-md-12 mb-3">
+                                    <label for="address" class="form-label">
+                                        <i class="fas fa-map-marker-alt me-1"></i>地址
+                                    </label>
+                                    <textarea class="form-control" id="address" th:field="*{address}" rows="2"
+                                              placeholder="請輸入地址(選填)"></textarea>
                                 </div>
                             </div>
                             
-                            <div class="mb-3">
-                                <label for="username" class="form-label">用戶名</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i class="fas fa-user"></i>
-                                    </span>
-                                    <input type="text" class="form-control" id="username" 
-                                           th:field="*{username}" required>
-                                </div>
-                                <small class="form-text text-muted">用戶名必須唯一，用於登錄</small>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="email" class="form-label">電子郵件</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i class="fas fa-envelope"></i>
-                                    </span>
-                                    <input type="email" class="form-control" id="email" 
-                                           th:field="*{email}" required>
-                                </div>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="password" class="form-label">密碼</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i class="fas fa-lock"></i>
-                                    </span>
-                                    <input type="password" class="form-control" id="password" 
-                                           th:field="*{password}" required>
-                                </div>
-                                <small class="form-text text-muted">密碼至少8個字符</small>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="phone" class="form-label">電話號碼</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i class="fas fa-phone"></i>
-                                    </span>
-                                    <input type="tel" class="form-control" id="phone" 
-                                           th:field="*{phone}">
-                                </div>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="address" class="form-label">地址</label>
-                                <textarea class="form-control" id="address" rows="3" 
-                                          th:field="*{address}"></textarea>
-                            </div>
-                            
-                            <div class="mb-3 form-check">
-                                <input type="checkbox" class="form-check-input" id="terms" required>
-                                <label class="form-check-label" for="terms">
-                                    我同意 <a href="#" class="text-primary">服務條款</a> 和 <a href="#" class="text-primary">隱私政策</a>
-                                </label>
-                            </div>
-                            
-                            <div class="d-grid gap-2">
+                            <!-- 提交按鈕 -->
+                            <div class="d-grid gap-2 mt-4">
                                 <button type="submit" class="btn btn-primary btn-lg">
-                                    <i class="fas fa-user-plus me-2"></i>註冊帳號
+                                    <i class="fas fa-user-plus me-2"></i>註冊
                                 </button>
                             </div>
                         </form>
-                        
                         <hr class="my-4">
                         
+                        <!-- 返回登錄 -->
                         <div class="text-center">
-                            <p class="mb-2">已經有帳號？</p>
-                            <a th:href="@{/login}" class="btn btn-outline-primary">
-                                <i class="fas fa-sign-in-alt me-2"></i>立即登錄
+                            <p class="mb-2">已有帳號？</p>
+                            <a th:href="@{/login}" class="btn btn-outline-secondary">
+                                <i class="fas fa-sign-in-alt me-2"></i>返回登錄
                             </a>
                         </div>
+                    </div>
+                </div>
+                
+                <!-- 註冊須知 -->
+                <div class="card mt-3">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>註冊須知</h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="mb-0">
+                            <li>用戶名和電子郵件必須唯一,不可重複</li>
+                            <li>密碼請至少包含6個字符</li>
+                            <li>註冊成功後將自動獲得顧客(CUSTOMER)權限</li>
+                            <li>如需商家權限,請聯繫管理員</li>
+                            <li>請妥善保管您的帳號密碼</li>
+                        </ul>
                     </div>
                 </div>
             </div>

@@ -39,8 +39,14 @@ public class UserService {
         // 加密密碼
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         
-        // 設置默認角色為顧客
-        user.setRole(User.UserRole.CUSTOMER);
+        // 如果沒有設置角色,默認為顧客
+        if (user.getRole() == null) {
+            user.setRole(User.UserRole.CUSTOMER);
+        }
+        // 如果沒有設置角色,默認為顧客
+        if (user.getRole() == null) {
+            user.setRole(User.UserRole.CUSTOMER);
+        }
         user.setEnabled(true);
         
         return userRepository.save(user);

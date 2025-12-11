@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>我的商品 - 商家管理</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container mt-4">
+            <!--頁面標題和操作按鈕 -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <h2><i class="fas fa-box-open me-2"></i>我的商品管理</h2>
+                    <p class="text-muted">管理您發布的所有商品</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <a th:href="@{/merchant/products/new}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>新增商品
+                    </a>
+                </div>
+            </div>
+            
+            <!-- 成功/錯誤消息 -->
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i><span th:text="${successMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            
+            <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i><span th:text="${errorMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            
+            <!-- 商品列表 -->
+            <div class="card">
+                <div class="card-body">
+                    <div th:if="${products.empty}" class="text-center py-5">
+                        <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
+                        <h4 class="text-muted">您還沒有發布任何商品</h4>
+                        <p class="text-muted">點擊上方的"新增商品"按鈕開始發布商品</p>
+                <a th:href="@{/merchant/products/new}" class="btn btn-primary mt-3">
+                            <i class="fas fa-plus me-2"></i>立即新增
+                        </a>
+                    </div>
+                    
+                    <div th:if="${!products.empty}" class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>SKU</th>
+                                    <th>商品名稱</th>
+                                    <th>分類</th>
+                                    <th>價格</th>
+                                    <th>庫存</th>
+                                    <th>狀態</th>
+                                    <th>創建時間</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="product : ${products}">
+                                    <td><code th:text="${product.sku}">SKU</code></td>
+                                    <td>
+                                        <strong th:text="${product.name}">商品名稱</strong>
+                                        <br>
+                                        <small class="text-muted" th:text="${product.description?.length() > 50 ? product.description.substring(0, 50) + '...' : product.description}">描述</small>
+                                    </td>
+                                    <td>
+                                        <span th:text="${product.category?.name ?: '無分類'}" class="badge bg-secondary">分類</span>
+                                    </td>
+                                    <td class="text-primary">
+                                        <strong th:text="'$' + ${product.price}">$0.00</strong>
+                                    </td>
+                                    <td>
+                                        <span th:if="${product.stockQuantity > 10}" class="badge bg-success">
+                                            <span th:text="${product.stockQuantity}">0</span> 件
+                                        </span>
+                                        <span th:if="${product.stockQuantity > 0 && product.stockQuantity <= 10}" class="badge bg-warning">
+                                            <span th:text="${product.stockQuantity}">0</span> 件
+                                        </span>
+                                        <span th:if="${product.stockQuantity <= 0}" class="badge bg-danger">
+                                            缺貨
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${product.status == T(com.onlineshop.model.Product.ProductStatus).ACTIVE}" class="badge bg-success">
+                                            <i class="fas fa-check-circle"></i> 上架中
+                                        </span>
+                                        <span th:if="${product.status == T(com.onlineshop.model.Product.ProductStatus).INACTIVE}" class="badge bg-secondary">
+                                            <i class="fas fa-ban"></i> 已下架
+                                        </span>
+                                        <span th:if="${product.status == T(com.onlineshop.model.Product.ProductStatus).OUT_OF_STOCK}" class="badge bg-danger">
+                                            <i class="fas fa-times-circle"></i> 缺貨
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small th:text="${#temporals.format(product.createdAt, 'yyyy-MM-dd HH:mm')}">2024-01-01</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <!-- 查看詳情 -->
+                                            <a th:href="@{/products/{id}(id=${product.id})}" class="btn btn-sm btn-outline-primary" title="查看詳情">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            
+                                            <!-- 編輯 -->
+                                            <a th:href="@{/merchant/products/{id}/edit(id=${product.id})}" class="btn btn-sm btn-outline-warning" title="編輯">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            
+                                            <!-- 切換狀態 -->
+                                            <form th:action="@{/merchant/products/{id}/toggle-status(id=${product.id})}" method="post" style="display:inline;">
+                                                <button type="submit" class="btn btn-sm btn-outline-info" title="切換狀態">
+                                                    <i class="fas fa-exchange-alt"></i>
+                                                </button>
+                                            </form>
+                                            
+                                            <!-- 刪除 -->
+                                            <form th:action="@{/merchant/products/{id}/delete(id=${product.id})}" method="post" 
+                                                  onsubmit="return confirm('確定要刪除此商品嗎？此操作無法撤銷。');" style="display:inline;">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="刪除">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 統計信息 -->
+            <div th:if="${!products.empty}" class="row mt-4">
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title">總商品數</h5>
+                            <h2 class="text-primary" th:text="${products.size()}">0</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title">上架中</h5>
+                            <h2 class="text-success" th:text="${products.stream().filter(p -> p.status == T(com.onlineshop.model.Product.ProductStatus).ACTIVE).count()}">0</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title">已下架</h5>
+                            <h2 class="text-secondary" th:text="${products.stream().filter(p -> p.status == T(com.onlineshop.model.Product.ProductStatus).INACTIVE).count()}">0</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title">缺貨</h5>
+                            <h2 class="text-danger" th:text="${products.stream().filter(p -> p.stockQuantity <= 0).count()}">0</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

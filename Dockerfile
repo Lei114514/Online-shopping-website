@@ -1,5 +1,5 @@
 # 使用Maven構建階段
-FROM maven:3.8.4-openjdk-17 AS build
+FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /app
 
 # 配置Maven使用阿里雲鏡像源
@@ -28,7 +28,7 @@ COPY src ./src
 # 構建應用程序
 RUN mvn clean package -DskipTests
 
-# 運行階段
+# 運行階段 - 使用 OpenJDK 官方鏡像
 FROM openjdk:17-jdk-slim
 WORKDIR /app
 

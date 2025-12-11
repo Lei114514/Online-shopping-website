@@ -58,8 +58,39 @@ online-shop-project/
 ## 快速開始
 1. 安裝Java 17+, Maven, Docker
 2. 配置MySQL數據庫
-3. 運行 `mvn spring-boot:run`
-4. 訪問 http://localhost:8080
+3. **準備商品圖片** (見下方說明)
+4. 運行 `mvn spring-boot:run`
+5. 訪問 http://localhost:8080
+
+## 商品圖片配置
+
+### 📂 圖片存儲路徑
+商品圖片存儲在本地路徑：
+```
+src/main/resources/static/images/products/
+```
+
+### 🖼️ 所需圖片
+請在上述目錄中放置以下圖片文件：
+- `iphone-15-pro.jpg` - iPhone 15 Pro
+- `macbook-pro.jpg` - MacBook Pro 16"
+- `airpods-pro.jpg` - AirPods Pro
+- `ipad-air.jpg` - iPad Air
+- `apple-watch.jpg` - Apple Watch Series 9
+- `magic-keyboard.jpg` - Magic Keyboard
+
+### 📐 圖片要求
+- 格式：JPG、PNG 或 WEBP
+- 建議尺寸：至少 400x300像素
+- 建議大小：小於 500KB
+
+### 🔗 訪問方式
+圖片將通過以下URL訪問：
+```
+http://localhost:8080/images/products/[圖片檔名]
+```
+
+詳細說明請參考：`src/main/resources/static/images/products/README.md`
 
 ## 數據庫設計
 詳細的數據庫設計請參考 `docs/database-schema.sql`

@@ -2,8 +2,10 @@ package com.onlineshop.service;
 
 import com.onlineshop.model.Product;
 import com.onlineshop.model.Category;
+import com.onlineshop.model.User;
 import com.onlineshop.repository.ProductRepository;
 import com.onlineshop.repository.CategoryRepository;
+import com.onlineshop.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +32,9 @@ public class ProductService {
     
     @Autowired
     private CategoryRepository categoryRepository;
+    
+    @Autowired
+    private UserRepository userRepository;
     
     private final String UPLOAD_DIR = "uploads/products/";
     
@@ -200,5 +205,54 @@ public class ProductService {
      */
     private String generateSku() {
         return "PROD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    }
+    
+    /**
+     * 獲取商家的所有商品
+     */
+    public List<Product> getProductsByMerchant(Long userId) {
+        return productRepository.findByCreatedById(userId);
+    }
+    
+    /**
+     * 創建商家商品
+     */
+    public Product createMerchantProduct(Product product, Long categoryId, Long userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("用戶不存在"));
+        
+        product.setCreatedBy(user);
+        return createProduct(product, categoryId);
+    }
+    
+    /**
+     * 更新商家商品
+     */
+    public Product updateMerchantProduct(Long productId, Product updatedProduct, Long categoryId, Long userId) {
+        // 驗證商品所有權
+        if (!productRepository.isProductOwnedByUser(productId, userId)) {
+            throw new SecurityException("您沒有權限修改此商品");
+        }
+        
+        return updateProduct(productId, updatedProduct, categoryId);
+    }
+    
+    /**
+     * 刪除商家商品
+     */
+    public void deleteMerchantProduct(Long productId, Long userId) {
+        // 驗證商品所有權
+        if (!productRepository.isProductOwnedByUser(productId, userId)) {
+            throw new SecurityException("您沒有權限刪除此商品");
+        }
+        
+        deleteProduct(productId);
+    }
+    
+    /**
+     * 檢查商品是否屬於指定用戶
+     */
+    public boolean isProductOwnedByUser(Long productId, Long userId) {
+        return productRepository.isProductOwnedByUser(productId, userId);
     }
 }

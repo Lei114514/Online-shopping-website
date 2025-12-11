@@ -45,12 +45,12 @@ public class SecurityConfig {
                 // 顧客角色可訪問的URL
                 .requestMatchers(
                     "/cart/**", "/orders/**", "/profile/**"
-                ).hasRole("CUSTOMER")
+                ).hasAnyRole("CUSTOMER", "SALES")
                 
-                // 銷售角色可訪問的URL
+                // 商家/銷售角色可訪問的URL
                 .requestMatchers(
-                    "/sales/**", "/admin/products/**", "/admin/orders/**"
-                ).hasRole("SALES")
+                    "/merchant/**"
+                ).hasAnyRole("SALES", "ADMIN")
                 
                 // 管理員角色可訪問的URL
                 .requestMatchers(

@@ -57,4 +57,17 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query("SELECT p FROM Product p LEFT JOIN OrderItem oi ON p.id = oi.product.id " +
            "GROUP BY p.id ORDER BY SUM(oi.quantity) DESC")
     List<Product> findTopSellingProducts();
+    
+    /**
+     * 根據創建者查找商品
+     */
+    @Query("SELECT p FROM Product p WHERE p.createdBy.id = :userId ORDER BY p.createdAt DESC")
+    List<Product> findByCreatedById(@Param("userId") Long userId);
+    
+    /**
+     * 檢查商品是否屬於指定用戶
+     */
+    @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM Product p " +
+           "WHERE p.id = :productId AND p.createdBy.id = :userId")
+    boolean isProductOwnedByUser(@Param("productId") Long productId, @Param("userId") Long userId);
 }
