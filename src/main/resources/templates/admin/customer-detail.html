@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}"><head>
+    <title th:text="${customer.fullName} + ' - 客戶詳情'">客戶詳情</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container-fluid mt-4">
+            <div class="row mb-4">
+                <div class="col">
+                    <h2><i class="fas fa-user me-2"></i>客戶詳情</h2><nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a th:href="@{/}">首頁</a></li>
+                            <li class="breadcrumb-item"><a th:href="@{/admin}">管理員儀表板</a></li>
+                            <li class="breadcrumb-item"><a th:href="@{/admin/customers}">客戶管理</a></li>
+                            <li class="breadcrumb-item active" th:text="${customer.username}"></li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+            
+            <!-- 消息提示 -->
+            <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i><span th:text="${message}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div><div class="row">
+                <!-- 客戶基本信息 -->
+                <div class="col-md-4mb-4">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fas fa-user-circle me-2"></i>基本信息</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center mb-3">
+                                <i class="fas fa-user-circle fa-5x text-primary"></i>
+                                <h4 class="mt-3" th:text="${customer.fullName}"></h4>
+                                <p class="text-muted mb-1" th:text="'@' + ${customer.username}"></p>
+                                <span th:class="'badge bg-' + ${customer.enabled ? 'success' : 'danger'}"
+                                      th:text="${customer.enabled ? '帳戶啟用' : '帳戶停用'}">
+                                </span>
+                            </div>
+                            
+                            <hr>
+                            
+                            <div class="mb-3">
+                                <strong><i class="fas fa-envelope me-2 text-muted"></i>郵箱:</strong>
+                                <p class="mb-0" th:text="${customer.email}"></p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <strong><i class="fas fa-phone me-2 text-muted"></i>電話:</strong>
+                                <p class="mb-0" th:text="${customer.phone ?: '未填寫'}"></p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <strong><i class="fas fa-map-marker-alt me-2 text-muted"></i>地址:</strong>
+                                <p class="mb-0" th:text="${customer.address ?: '未填寫'}"></p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <strong><i class="fas fa-user-tag me-2 text-muted"></i>角色:</strong>
+                                <p class="mb-0">
+                                    <span th:class="'badge bg-' + ${customer.role == T(com.onlineshop.model.User$UserRole).ADMIN ? 'danger' :customer.role == T(com.onlineshop.model.User$UserRole).SALES ? 'warning' : 'primary'}"
+                                          th:text="${customer.role}">
+                                    </span>
+                                </p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <strong><i class="fas fa-calendar me-2 text-muted"></i>註冊日期:</strong>
+                                <p class="mb-0" th:text="${#temporals.format(customer.createdAt, 'yyyy-MM-dd HH:mm')}"></p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <strong><i class="fas fa-clock me-2 text-muted"></i>最後更新:</strong>
+                                <p class="mb-0" th:text="${#temporals.format(customer.updatedAt, 'yyyy-MM-dd HH:mm')}"></p>
+                            </div>
+                            
+                            <hr>
+                            
+                            <!-- 操作按鈕 -->
+                            <form th:action="@{/admin/customers/{id}/toggle-status(id=${customer.id})}" 
+                                  method="post" class="d-grid">
+                                <button type="submit" 
+                                        th:class="'btn btn-' + ${customer.enabled ? 'warning' : 'success'}"
+                                        onclick="return confirm('確定要更改客戶狀態嗎?')">
+                                    <i th:class="'fas fa-' + ${customer.enabled ? 'ban' : 'check'} + ' me-1'"></i>
+                                    <span th:text="${customer.enabled ? '停用帳戶' : '啟用帳戶'}"></span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- 統計卡片 -->
+                    <div class="card mt-3">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>統計數據</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>總訂單數:</span>
+                                <strong th:text="${totalOrders}">0</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>完成訂單:</span>
+                                <strong class="text-success" th:text="${completedOrders}">0</strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>活動記錄:</span>
+                                <strong class="text-info" th:text="${#lists.size(activities)}">0</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 訂單和活動記錄 -->
+                <div class="col-md-8 mb-4">
+                    <!-- 訂單列表 -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>訂單記錄</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>訂單編號</th>
+                                            <th>金額</th>
+                                            <th>狀態</th>
+                                            <th>支付狀態</th>
+                                            <th>日期</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="order : ${orders}">
+                                            <td>
+                                                <a th:href="@{/admin/orders/{id}(id=${order.id})}"
+                                                   th:text="${order.orderNumber}"
+                                                   class="text-decoration-none"></a>
+                                            </td>
+                                            <td th:text="'$' + ${order.totalAmount}"></td>
+                                            <td>
+                                                <span th:class="'badge bg-' + ${order.status == T(com.onlineshop.model.Order$OrderStatus).PENDING ? 'warning' :
+                                                                                order.status == T(com.onlineshop.model.Order$OrderStatus).PROCESSING ? 'info' :
+                                                                                  order.status == T(com.onlineshop.model.Order$OrderStatus).SHIPPED ? 'primary' :
+                                                                                  order.status == T(com.onlineshop.model.Order$OrderStatus).DELIVERED ? 'success' : 'danger'}"
+                                                      th:text="${order.status}">
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span th:class="'badge bg-' + ${order.paymentStatus == T(com.onlineshop.model.Order$PaymentStatus).PAID ? 'success' :
+                                                                                  order.paymentStatus == T(com.onlineshop.model.Order$PaymentStatus).PENDING ? 'warning' : 'danger'}"
+                                                      th:text="${order.paymentStatus}">
+                                                </span>
+                                            </td>
+                                            <td th:text="${#temporals.format(order.createdAt, 'yyyy-MM-dd')}"></td>
+                                            <td>
+                                                <a th:href="@{/admin/orders/{id}(id=${order.id})}"
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr><tr th:if="${#lists.isEmpty(orders)}">
+                                            <td colspan="6" class="text-center text-muted py-4">
+                                                <i class="fas fa-shopping-cart fa-2x d-block mb-2"></i>
+                                暫無訂單記錄
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 活動日誌 -->
+                    <div class="card">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0"><i class="fas fa-history me-2"></i>活動日誌</h5>
+                        </div>
+                        <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
+                            <div class="list-group list-group-flush">
+                                <div th:each="activity : ${activities}"
+                                     class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">
+                                            <span th:class="'badge bg-' + ${activity.activityType == 'LOGIN' ? 'success' :
+                                                                            activity.activityType == 'PLACE_ORDER' ? 'primary' :
+                                                                            activity.activityType == 'VIEW_PRODUCT' ? 'info' : 'secondary'}"
+                                                  th:text="${activity.activityType}">
+                                            </span>
+                                        </h6>
+                                        <small class="text-muted" 
+                                               th:text="${#temporals.format(activity.createdAt, 'yyyy-MM-dd HH:mm:ss')}"></small>
+                                    </div>
+                                    <p class="mb-1" th:text="${activity.activityDetails}"></p>
+                                    <small class="text-muted" th:if="${activity.ipAddress}">
+                                        <i class="fas fa-globe me-1"></i>IP: <span th:text="${activity.ipAddress}"></span>
+                                    </small>
+                                </div>
+                                <div th:if="${#lists.isEmpty(activities)}"
+                                     class="list-group-item text-center text-muted py-4">
+                                    <i class="fas fa-history fa-2x d-block mb-2"></i>
+                                    暫無活動記錄
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,7 +1,9 @@
 package com.onlineshop.controller;
 
 import com.onlineshop.model.Product;
+import com.onlineshop.model.Category;
 import com.onlineshop.service.ProductService;
+import com.onlineshop.repository.CategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -23,12 +25,15 @@ public class HomeController {
     @Autowired
     private ProductService productService;
     
+    @Autowired
+    private CategoryRepository categoryRepository;
+    
     /**
      * 首頁
      */
     @GetMapping("/")
     public String home(Model model) {
-        // 獲取熱銷商品
+        //獲取熱銷商品
         List<Product> topProducts = productService.getTopSellingProducts();
         
         // 如果數據庫沒有數據，使用測試數據
@@ -52,7 +57,8 @@ public class HomeController {
      * 商品列表頁
      */
     @GetMapping("/products")
-    public String products(@RequestParam(required = false) String search,@RequestParam(required = false) Long categoryId,
+    public String products(@RequestParam(required = false) String search,
+                          @RequestParam(required = false) Long categoryId,
                           Model model) {
         List<Product> products;
         
@@ -63,6 +69,7 @@ public class HomeController {
         } else if (categoryId != null) {
             // 按分類篩選
             products = productService.getProductsByCategory(categoryId);
+            model.addAttribute("selectedCategoryId", categoryId);
         } else {
             // 所有商品
             products = productService.getAllProducts();
@@ -73,6 +80,9 @@ public class HomeController {
             products = createSampleProducts();
         }
         
+        // 添加分類列表
+        List<Category> categories = categoryRepository.findAll();
+        model.addAttribute("categories", categories);
         model.addAttribute("products", products);
         return "products";
     }
@@ -84,8 +94,7 @@ public class HomeController {
     public String productDetail(@PathVariable Long id, Model model) {
         try {
             Product product = productService.getProductById(id);
-            model.addAttribute("product", product);
-        } catch (Exception e) {
+            model.addAttribute("product", product);} catch (Exception e) {
             // 如果找不到商品，使用測試數據
             Product product = createSampleProducts().get(0);
             product.setId(id);
@@ -111,7 +120,7 @@ public class HomeController {
     }
     
     /**
-     * 訪問被拒絕頁
+     *訪問被拒絕頁
      */
     @GetMapping("/access-denied")
     public String accessDenied() {
@@ -127,7 +136,7 @@ public class HomeController {
         Product product1 = new Product();
         product1.setId(1L);
         product1.setName("iPhone 15 Pro");
-        product1.setDescription("最新款 iPhone 15 Pro，搭載 A17 Pro 芯片，配備 6.5 英寸超視網膜 XDR 顯示屏，128GB 存儲空間");
+        product1.setDescription("Latest iPhone 15 Pro with A17 Pro chip, 6.5-inch Super Retina XDR display, 128GB storage");
         product1.setPrice(new BigDecimal("699.99"));
         product1.setSku("IPHONE-15-PRO-128");
         product1.setStockQuantity(100);
@@ -138,7 +147,7 @@ public class HomeController {
         Product product2 = new Product();
         product2.setId(2L);
         product2.setName("MacBook Pro 16\"");
-        product2.setDescription("強大的 MacBook Pro 16 英寸，配備 M3 Pro 芯片，16GB RAM，512GB SSD");
+        product2.setDescription("Powerful MacBook Pro 16-inch with M3 Pro chip, 16GB RAM, 512GB SSD");
         product2.setPrice(new BigDecimal("1299.99"));
         product2.setSku("MACBOOK-PRO-16-512");
         product2.setStockQuantity(50);
@@ -149,8 +158,8 @@ public class HomeController {
         Product product3 = new Product();
         product3.setId(3L);
         product3.setName("AirPods Pro");
-        product3.setDescription("主動降噪 AirPods Pro，提供沉浸式音質體驗");
-        product3.setPrice(new BigDecimal("19.99"));
+        product3.setDescription("Active Noise Cancelling AirPods Pro with immersive audio experience");
+        product3.setPrice(new BigDecimal("249.99"));
         product3.setSku("AIRPODS-PRO-2");
         product3.setStockQuantity(200);
         product3.setImageUrl("https://images.unsplash.com/photo-1606841837239-c5a1a4a07af7?w=400&h=300&fit=crop");

@@ -21,14 +21,14 @@
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <select class="form-select" name="categoryId">
+                        <select class="form-select" name="categoryId" onchange="this.form.submit()">
                             <option value="">所有分類</option>
-                            <!-- 這裡可以動態加載分類 -->
-                            <option value="1">電子產品</option>
-                            <option value="2">服裝</option>
-                            <option value="3">書籍</option>
-                            <option value="4">家居用品</option>
-                            <option value="5">食品飲料</option>
+                            <option th:each="category : ${categories}"
+                                    th:value="${category.id}"
+                                    th:text="${category.name}"
+                                    th:selected="${selectedCategoryId != null && selectedCategoryId == category.id}">
+                                Category
+                            </option>
                         </select>
                     </div>
                 </form>
@@ -39,7 +39,11 @@
         <div class="row">
             <div th:each="product : ${products}" class="col-md-4 col-lg-3 mb-4">
                 <div class="card h-100 product-card">
-                    <!-- 隱藏商品圖片 -->
+                    <img th:if="${product.imageUrl}"
+                         th:src="@{'/api/images/' + ${product.imageUrl}}"
+                         class="card-img-top"
+                         th:alt="${product.name}"
+                         style="height: 200px; object-fit: cover;">
                     <div class="card-body d-flex flex-column">
                         <div class="mb-2">
                             <span th:if="${product.stockQuantity <= 10 && product.stockQuantity > 0}"

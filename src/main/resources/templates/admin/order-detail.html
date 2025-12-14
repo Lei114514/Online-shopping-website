@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title th:text="${order.orderNumber} + ' - 訂單詳情'">訂單詳情</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container-fluid mt-4">
+            <div class="row mb-4">
+                <div class="col">
+                    <h2><i class="fas fa-file-invoice me-2"></i>訂單詳情</h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a th:href="@{/}">首頁</a></li>
+                            <li class="breadcrumb-item"><a th:href="@{/admin}">管理員儀表板</a></li>
+                            <li class="breadcrumb-item"><a th:href="@{/admin/orders}">訂單管理</a></li>
+                            <li class="breadcrumb-item active" th:text="${order.orderNumber}"></li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+            
+            <!-- 消息提示 -->
+            <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i><span th:text="${message}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            
+            <div class="row">
+                <!-- 訂單信息 -->
+                <div class="col-md-8 mb-4">
+                    <!-- 基本信息卡片 -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>訂單信息</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6mb-3">
+                                    <strong>訂單編號:</strong>
+                                    <p class="mb-0 text-primary fw-bold" th:text="${order.orderNumber}"></p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <strong>訂單日期:</strong>
+                                    <p class="mb-0" th:text="${#temporals.format(order.createdAt, 'yyyy-MM-dd HH:mm:ss')}"></p>
+                                </div><div class="col-md-6 mb-3">
+                                    <strong>客戶:</strong>
+                                    <p class="mb-0"><a th:href="@{/admin/customers/{id}(id=${order.user.id})}"
+                                           th:text="${order.user.fullName}"
+                                           class="text-decoration-none">
+                                        </a>
+                                    </p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <strong>總金額:</strong>
+                                    <p class="mb-0 text-success fw-bold fs-5" th:text="'$' + ${order.totalAmount}"></p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <strong>訂單狀態:</strong>
+                                    <p class="mb-0">
+                                        <span th:class="'badge bg-' + ${order.status == T(com.onlineshop.model.Order$OrderStatus).PENDING ? 'warning' :order.status == T(com.onlineshop.model.Order$OrderStatus).PROCESSING ? 'info' :
+                                                                        order.status == T(com.onlineshop.model.Order$OrderStatus).SHIPPED ? 'primary' :
+                                                                        order.status == T(com.onlineshop.model.Order$OrderStatus).DELIVERED ? 'success' : 'danger'}"
+                                              th:text="${order.status}">
+                                        </span>
+                                    </p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <strong>支付狀態:</strong>
+                                    <p class="mb-0">
+                                        <span th:class="'badge bg-' + ${order.paymentStatus == T(com.onlineshop.model.Order$PaymentStatus).PAID ? 'success' :
+                                                                        order.paymentStatus == T(com.onlineshop.model.Order$PaymentStatus).PENDING ? 'warning' : 'danger'}"
+                                              th:text="${order.paymentStatus}">
+                                        </span>
+                                    </p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <strong>支付方式:</strong>
+                                    <p class="mb-0" th:text="${order.paymentMethod ?: '未指定'}"></p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <strong>最後更新:</strong>
+                                    <p class="mb-0" th:text="${#temporals.format(order.updatedAt, 'yyyy-MM-dd HH:mm:ss')}"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 配送信息 -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0"><i class="fas fa-truck me-2"></i>配送信息</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <strong>配送地址:</strong>
+                                <p class="mb-0" th:text="${order.shippingAddress}"></p>
+                            </div>
+                            <div class="mb-3" th:if="${order.billingAddress}">
+                                <strong>帳單地址:</strong>
+                                <p class="mb-0" th:text="${order.billingAddress}"></p>
+                            </div>
+                            <div th:if="${order.notes}">
+                                <strong>訂單備註:</strong>
+                                <p class="mb-0" th:text="${order.notes}"></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 訂單項目 -->
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="fas fa-list me-2"></i>訂單項目</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>商品名稱</th>
+                                            <th>SKU</th>
+                                            <th>單價</th>
+                                            <th>數量</th>
+                                            <th>小計</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="item : ${order.orderItems}">
+                                            <td th:text="${item.productName}"></td>
+                                            <td><small class="text-muted" th:text="${item.productSku}"></small></td>
+                                            <td th:text="'$' + ${item.price}"></td>
+                                            <td th:text="${item.quantity}"></td>
+                                            <td class="fw-bold" th:text="'$' + ${item.subtotal}"></td>
+                                        </tr>
+                                    </tbody>
+                                    <tfoot class="table-light">
+                                        <tr>
+                                            <td colspan="4" class="text-end fw-bold">總計:</td>
+                                            <td class="fw-bold text-success fs-5" th:text="'$' + ${order.totalAmount}"></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 操作面板 -->
+                <div class="col-md-4 mb-4">
+                    <!-- 更新訂單狀態 -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0"><i class="fas fa-edit me-2"></i>更新訂單狀態</h5>
+                        </div>
+                        <div class="card-body">
+                            <form th:action="@{/admin/orders/{id}/update-status(id=${order.id})}" 
+                                  method="post">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">訂單狀態</label>
+                                    <select class="form-select" name="status" required>
+                                        <option th:each="s : ${orderStatuses}" 
+                                                th:value="${s}" 
+                                                th:text="${s}"
+                                                th:selected="${s == order.status}"></option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-warning w-100">
+                                    <i class="fas fa-save me-1"></i>更新狀態
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- 更新支付狀態 -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="fas fa-credit-card me-2"></i>更新支付狀態</h5>
+                        </div>
+                        <div class="card-body">
+                            <form th:action="@{/admin/orders/{id}/update-payment(id=${order.id})}" 
+                                  method="post">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">支付狀態</label>
+                                    <select class="form-select" name="paymentStatus" required>
+                                        <option th:each="ps : ${paymentStatuses}" 
+                                                th:value="${ps}" 
+                                                th:text="${ps}"
+                                                th:selected="${ps == order.paymentStatus}"></option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fas fa-save me-1"></i>更新支付
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <!-- 快速操作 -->
+                    <div class="card">
+                        <div class="card-header bg-dark text-white">
+                            <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>快速操作</h5>
+                        </div>
+                        <div class="card-body"><a th:href="@{/admin/customers/{id}(id=${order.user.id})}" 
+                               class="btn btn-outline-primary w-100 mb-2">
+                                <i class="fas fa-user me-1"></i>查看客戶信息
+                            </a>
+                            <a th:href="@{/admin/orders}"
+                               class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-arrow-left me-1"></i>返回訂單列表
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -10,10 +10,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 
 /**
  * 安全配置類
- *配置Spring Security相關設置
+ * 配置Spring Security相關設置
  */
 @Configuration
 @EnableWebSecurity
@@ -37,9 +38,11 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authz -> authz
-                // 公開訪問的URL
+                // 公開訪問的URL - 包含所有靜態資源
                 .requestMatchers(
-                    "/", "/home", "/products", "/products/**", "/register", "/login", "/css/**", "/js/**", "/images/**"
+                    "/", "/home", "/products", "/products/**", "/register", "/login",
+                    "/css/**", "/js/**", "/images/**", "/fonts/**", "/vendor/**", "/static/**", "/api/images/**",
+                    "/favicon.ico", "/error"
                 ).permitAll()
                 
                 // 顧客角色可訪問的URL
@@ -77,6 +80,23 @@ public class SecurityConfig {
             )
             .csrf(csrf -> csrf
                 .ignoringRequestMatchers("/api/**") // API端點禁用CSRF
+            )
+            .headers(headers -> headers
+                // 配置內容安全策略（僅使用本地資源）
+                .contentSecurityPolicy(csp -> csp
+                    .policyDirectives("default-src 'self'; " +
+                        "script-src 'self' 'unsafe-inline'; " +
+                        "style-src 'self' 'unsafe-inline'; " +
+                        "font-src 'self' data:; " +
+                        "img-src 'self' data:; " +
+                        "connect-src 'self'")
+                )
+                // 允許在 iframe 中顯示（如果需要）
+                .frameOptions(frame -> frame.sameOrigin())
+                // 配置 Referrer Policy
+                .referrerPolicy(referrer -> referrer
+                    .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
+                )
             );
         
         return http.build();

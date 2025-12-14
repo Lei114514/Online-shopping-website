@@ -10,33 +10,33 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * 用戶活動日誌數據訪問接口
+ * User Activity Log Repository Interface
  */
 @Repository
 public interface UserActivityLogRepository extends JpaRepository<UserActivityLog, Long> {
     
     /**
-     * 根據用戶查找活動日誌
+     * Find activity logs by user
      */
     List<UserActivityLog> findByUser(User user);
     
     /**
-     * 根據活動類型查找日誌
+     * Find logs by activity type
      */
     List<UserActivityLog> findByActivityType(String activityType);
     
     /**
-     * 查找指定時間範圍內的活動日誌
+     * Find logs within date range
      */
     List<UserActivityLog> findByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
     
     /**
-     * 查找用戶在指定時間範圍內的活動日誌
+     * Find user logs within date range
      */
     List<UserActivityLog> findByUserAndCreatedAtBetween(User user, LocalDateTime startDate, LocalDateTime endDate);
     
     /**
-     * 獲取用戶活動統計
+     * Get user activity statistics
      */
     @Query("SELECT l.activityType, COUNT(l) as activityCount " +
            "FROM UserActivityLog l " +
@@ -48,7 +48,7 @@ public interface UserActivityLogRepository extends JpaRepository<UserActivityLog
                                             @Param("endDate") LocalDateTime endDate);
     
     /**
-     * 獲取熱門商品瀏覽統計
+     * Get product view statistics
      */
     @Query("SELECT SUBSTRING(l.activityDetails, LOCATE('productId=', l.activityDetails) + 10, 10) as productId, " +
            "COUNT(l) as viewCount " +
@@ -58,4 +58,35 @@ public interface UserActivityLogRepository extends JpaRepository<UserActivityLog
            "ORDER BY viewCount DESC")
     List<Object[]> getProductViewStatistics(@Param("startDate") LocalDateTime startDate,
                                            @Param("endDate") LocalDateTime endDate);
+    
+    /**
+     * Get recent activity logs
+     */
+    List<UserActivityLog> findTop20ByOrderByCreatedAtDesc();
+    
+    /**
+     * Get recent 100 activity logs
+     */
+    List<UserActivityLog> findTop100ByOrderByCreatedAtDesc();
+    
+    /**
+     * Get user's recent activity logs
+     */
+    List<UserActivityLog> findTop50ByUserOrderByCreatedAtDesc(User user);
+    
+    /**
+     * Find logs after specific date
+     */
+    List<UserActivityLog> findByCreatedAtAfter(LocalDateTime date);
+    
+    /**
+     * Get activity type statistics
+     */
+    @Query("SELECT l.activityType, COUNT(l) as activityCount " +
+           "FROM UserActivityLog l " +
+           "WHERE l.createdAt BETWEEN :startDate AND :endDate " +
+           "GROUP BY l.activityType " +
+           "ORDER BY activityCount DESC")
+    List<Object[]> getActivityTypeStatistics(@Param("startDate") LocalDateTime startDate,
+                                            @Param("endDate") LocalDateTime endDate);
 }

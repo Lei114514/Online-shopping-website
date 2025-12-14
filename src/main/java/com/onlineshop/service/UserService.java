@@ -43,10 +43,6 @@ public class UserService {
         if (user.getRole() == null) {
             user.setRole(User.UserRole.CUSTOMER);
         }
-        // 如果沒有設置角色,默認為顧客
-        if (user.getRole() == null) {
-            user.setRole(User.UserRole.CUSTOMER);
-        }
         user.setEnabled(true);
         
         return userRepository.save(user);

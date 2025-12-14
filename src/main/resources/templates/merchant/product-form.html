@@ -5,9 +5,10 @@
 <head>
     <title th:text="${product.id != null ? '編輯商品' : '新增商品'} + ' - 商家管理'">商品表單</title>
 </head>
-<body><div layout:fragment="content">
+<body>
+    <div layout:fragment="content">
         <div class="container mt-4">
-            <!--麵包屑導航 -->
+            <!-- 麵包屑導航 -->
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a th:href="@{/merchant/products}">我的商品</a></li>
@@ -27,7 +28,8 @@
             
             <!-- 錯誤消息 -->
             <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-circle me-2"></i><span th:text="${errorMessage}"></span>
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <span th:text="${errorMessage}"></span>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
             
@@ -92,11 +94,11 @@
                                 <label for="categoryId" class="form-label">商品分類</label>
                                 <select class="form-select" id="categoryId" name="categoryId">
                                     <option value="">-- 選擇分類 --</option>
-                                    <option th:each="category : ${categories}" 
-                                            th:value="${category.id}" 
+                                    <option th:each="category : ${categories}"
+                                            th:value="${category.id}"
                                             th:text="${category.name}"
                                             th:selected="${product.category != null && product.category.id == category.id}">
-                                        分類
+                                        Category
                                     </option>
                                 </select>
                             </div>
@@ -120,7 +122,7 @@
                             <small class="form-text text-muted">缺貨狀態會根據庫存數量自動更新</small>
                         </div>
                         
-                        <!--圖片說明 -->
+                        <!-- 圖片說明 -->
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle me-2"></i>
                             <strong>提示:</strong> 目前圖片功能已隱藏,商品將以文字形式展示

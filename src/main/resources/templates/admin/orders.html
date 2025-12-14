@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>訂單管理 - 線上購物系統</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container-fluid mt-4">
+            <div class="row mb-4">
+                <div class="col">
+                    <h2><i class="fas fa-shopping-bag me-2"></i>訂單管理</h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a th:href="@{/}">首頁</a></li>
+                            <li class="breadcrumb-item"><a th:href="@{/admin}">管理員儀表板</a></li>
+                            <li class="breadcrumb-item active">訂單管理</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+            
+            <!-- 搜索和篩選 -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form th:action="@{/admin/orders}" method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">搜索訂單</label>
+                            <input type="text" class="form-control" name="search" 
+                                   th:value="${search}" placeholder="訂單編號...">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">訂單狀態</label>
+                            <select class="form-select" name="status">
+                                <option value="">所有狀態</option>
+                                <option th:each="s : ${orderStatuses}" 
+                                        th:value="${s}" 
+                                        th:text="${s}"
+                                        th:selected="${s == selectedStatus}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">支付狀態</label>
+                            <select class="form-select" name="paymentStatus">
+                                <option value="">所有狀態</option>
+                                <option th:each="ps : ${paymentStatuses}" 
+                                        th:value="${ps}" 
+                                        th:text="${ps}"
+                                        th:selected="${ps == selectedPaymentStatus}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-search me-1"></i>搜索
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- 訂單列表 -->
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">訂單列表 (共 <span th:text="${#lists.size(orders)}">0</span> 筆)</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>訂單編號</th>
+                                    <th>客戶</th>
+                                    <th>金額</th>
+                                    <th>訂單狀態</th>
+                                    <th>支付狀態</th>
+                                    <th>配送地址</th>
+                                    <th>訂單日期</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="order : ${orders}">
+                                    <td>
+                                        <a th:href="@{/admin/orders/{id}(id=${order.id})}"
+                                           th:text="${order.orderNumber}"
+                                           class="text-decoration-none fw-bold">
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a th:href="@{/admin/customers/{id}(id=${order.user.id})}"
+                                           th:text="${order.user.fullName}"
+                                           class="text-decoration-none">
+                                        </a>
+                                    </td>
+                                    <td class="fw-bold text-success" th:text="'$' + ${order.totalAmount}"></td>
+                                    <td>
+                                        <span th:class="'badge bg-' + ${order.status == T(com.onlineshop.model.Order$OrderStatus).PENDING ? 'warning' :
+                                                                        order.status == T(com.onlineshop.model.Order$OrderStatus).PROCESSING ? 'info' :
+                                                                        order.status == T(com.onlineshop.model.Order$OrderStatus).SHIPPED ? 'primary' :
+                                                                        order.status == T(com.onlineshop.model.Order$OrderStatus).DELIVERED ? 'success' : 'danger'}"
+                                              th:text="${order.status}">
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span th:class="'badge bg-' + ${order.paymentStatus == T(com.onlineshop.model.Order$PaymentStatus).PAID ? 'success' :
+                                                                        order.paymentStatus == T(com.onlineshop.model.Order$PaymentStatus).PENDING ? 'warning' : 'danger'}"
+                                              th:text="${order.paymentStatus}">
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small th:text="${#strings.abbreviate(order.shippingAddress, 30)}"></small>
+                                    </td>
+                                    <td th:text="${#temporals.format(order.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
+                                    <td>
+                                        <a th:href="@{/admin/orders/{id}(id=${order.id})}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> 查看
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(orders)}">
+                                    <td colspan="8" class="text-center text-muted py-4">
+                                        <i class="fas fa-shopping-bag fa-3x d-block mb-2"></i>
+                                        沒有找到訂單
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

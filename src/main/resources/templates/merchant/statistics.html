@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>銷售統計 - 商家後台</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container mt-4">
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <h2><i class="fas fa-chart-line"></i> 銷售統計</h2>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a th:href="@{/}">首頁</a></li>
+                        <li class="breadcrumb-item"><a th:href="@{/merchant/orders}">訂單管理</a></li>
+                        <li class="breadcrumb-item active">銷售統計</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+
+        <!-- 時間範圍選擇 -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form th:action="@{/merchant/orders/statistics}" method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">統計期間</label>
+                        <select name="period" class="form-select" onchange="this.form.submit()">
+                            <option value="daily" th:selected="${selectedPeriod == 'daily'}">最近1天</option>
+                            <option value="weekly" th:selected="${selectedPeriod == 'weekly'}">最近7天</option>
+                            <option value="monthly" th:selected="${selectedPeriod == 'monthly'}">最近30天</option>
+                        </select>
+                    </div>
+                    <div class="col-md-8 d-flex align-items-end">
+                        <div class="text-muted">
+                            統計期間: 
+                            <strong th:text="${#temporals.format(startDate, 'yyyy-MM-dd')}"></strong> 
+                            至 
+                            <strong th:text="${#temporals.format(endDate, 'yyyy-MM-dd')}"></strong>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- 銷售統計 -->
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">每日銷售統計</h5>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${#lists.isEmpty(salesStats)}" class="text-center py-5">
+                            <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">該期間內沒有銷售數據</p>
+                        </div>
+
+                        <div th:if="${!#lists.isEmpty(salesStats)}" class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>日期</th>
+                                        <th class="text-center">訂單數</th>
+                                        <th class="text-end">總營收</th>
+                                        <th class="text-end">平均訂單金額</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="stat : ${salesStats}">
+                                        <td th:text="${stat[0]}"></td>
+                                        <td class="text-center" th:text="${stat[1]}"></td>
+                                        <td class="text-end fw-bold text-success" th:text="'$' + ${#numbers.formatDecimal(stat[2], 1, 2)}"></td>
+                                        <td class="text-end" th:text="'$' + ${#numbers.formatDecimal(stat[3], 1, 2)}"></td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-active">
+                                        <td><strong>總計</strong></td>
+                                        <td class="text-center">
+                                            <strong th:text="${#aggregates.sum(salesStats.![#this[1]])}"></strong>
+                                        </td>
+                                        <td class="text-end">
+                                            <strong class="text-success" th:text="'$' + ${#numbers.formatDecimal(#aggregates.sum(salesStats.![#this[2]]), 1, 2)}"></strong>
+                                        </td>
+                                        <td class="text-end">
+                                            <strong th:text="'$' + ${#numbers.formatDecimal(#aggregates.avg(salesStats.![#this[3]]), 1, 2)}"></strong>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 熱銷商品 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">熱銷商品 TOP 10</h5>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${#lists.isEmpty(topProducts)}" class="text-center py-5">
+                            <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">該期間內沒有銷售數據</p>
+                        </div>
+
+                        <div th:if="${!#lists.isEmpty(topProducts)}" class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>排名</th>
+                                        <th>商品名稱</th>
+                                        <th class="text-center">銷售數量</th>
+                                        <th class="text-end">銷售額</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="product, iterStat : ${topProducts}">
+                                        <td>
+                                            <span class="badge" 
+                                                  th:classappend="${iterStat.index == 0} ? 'bg-warning' : 
+                                                                 (${iterStat.index == 1} ? 'bg-secondary' : 
+                                                                 (${iterStat.index == 2} ? 'bg-info' : 'bg-light text-dark'))"
+                                                  th:text="${iterStat.index + 1}">
+                                            </span>
+                                        </td>
+                                        <td th:text="${product[0]}"></td>
+                                        <td class="text-center fw-bold" th:text="${product[1]} + ' 件'"></td>
+                                        <td class="text-end text-success fw-bold" th:text="'$' + ${#numbers.formatDecimal(product[2], 1, 2)}"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 統計摘要 -->
+            <div class="col-md-4">
+                <div class="card mb-4 bg-primary text-white">
+                    <div class="card-body">
+                        <h6 class="card-title">總訂單數</h6>
+                        <h2 class="mb-0" th:text="${!#lists.isEmpty(salesStats)} ? ${#aggregates.sum(salesStats.![#this[1]])} : 0"></h2>
+                        <small>筆訂單</small>
+                    </div>
+                </div>
+
+                <div class="card mb-4 bg-success text-white">
+                    <div class="card-body">
+                        <h6 class="card-title">總營收</h6>
+                        <h2 class="mb-0" th:text="${!#lists.isEmpty(salesStats)} ? ('$' + ${#numbers.formatDecimal(#aggregates.sum(salesStats.![#this[2]]), 1, 2)}) : '$0.00'"></h2>
+                        <small>營業額</small>
+                    </div>
+                </div>
+
+                <div class="card mb-4 bg-info text-white">
+                    <div class="card-body">
+                        <h6 class="card-title">平均訂單金額</h6>
+                        <h2 class="mb-0" th:text="${!#lists.isEmpty(salesStats)} ? ('$' + ${#numbers.formatDecimal(#aggregates.avg(salesStats.![#this[3]]), 1, 2)}) : '$0.00'"></h2>
+                        <small>每筆訂單</small>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">熱銷商品數</h6>
+                        <h2 class="mb-0 text-primary" th:text="${#lists.size(topProducts)}"></h2>
+                        <small class="text-muted">種商品</small>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 mt-4">
+                    <a th:href="@{/merchant/orders}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left"></i> 返回訂單列表
+                    </a>
+                    <a th:href="@{/merchant/products}" class="btn btn-outline-secondary">
+                        <i class="fas fa-box"></i> 商品管理
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

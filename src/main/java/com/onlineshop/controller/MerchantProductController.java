@@ -45,13 +45,19 @@ public class MerchantProductController {
      */
     @GetMapping
     public String listProducts(Model model, Authentication authentication) {
-        User currentUser = getCurrentUser(authentication);
-        List<Product> products = productService.getProductsByMerchant(currentUser.getId());
-        
-        model.addAttribute("products", products);
-        model.addAttribute("currentUser", currentUser);
-        
-        return "merchant/product-list";
+        try {
+            User currentUser = getCurrentUser(authentication);
+            List<Product> products = productService.getProductsByMerchant(currentUser.getId());
+            
+            model.addAttribute("products", products);
+            model.addAttribute("currentUser", currentUser);
+            
+            return "merchant/product-list";
+        } catch (Exception e) {
+            model.addAttribute("errorMessage", "無法載入商品列表: " + e.getMessage());
+            model.addAttribute("products", java.util.Collections.emptyList());
+            return "merchant/product-list";
+        }
     }
     
     /**
@@ -150,7 +156,8 @@ public class MerchantProductController {
             User currentUser = getCurrentUser(authentication);
             productService.deleteMerchantProduct(id, currentUser.getId());
             
-            redirectAttributes.addFlashAttribute("successMessage", "商品刪除成功！");} catch (SecurityException e) {
+            redirectAttributes.addFlashAttribute("successMessage", "商品刪除成功！");
+        } catch (SecurityException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "刪除商品失敗: " + e.getMessage());

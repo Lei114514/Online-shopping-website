@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>訂單管理 - 商家後台</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container mt-4">
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <h2><i class="fas fa-shopping-cart"></i> 訂單管理</h2>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a th:href="@{/}">首頁</a></li>
+                        <li class="breadcrumb-item active">訂單管理</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+
+        <!-- 成功/錯誤消息 -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i> <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- 篩選和操作欄 -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form th:action="@{/merchant/orders}" method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">訂單狀態</label>
+                        <select name="status" class="form-select" onchange="this.form.submit()">
+                            <option value="">全部狀態</option>
+                            <option th:each="status : ${orderStatuses}" 
+                                    th:value="${status}" 
+                                    th:text="${status.name()}"
+                                    th:selected="${selectedStatus != null && selectedStatus == status.name()}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-8 d-flex align-items-end">
+                        <a th:href="@{/merchant/orders/statistics}" class="btn btn-info me-2">
+                            <i class="fas fa-chart-bar"></i> 銷售統計
+                        </a>
+                        <a th:href="@{/merchant/products}" class="btn btn-secondary">
+                            <i class="fas fa-box"></i> 商品管理
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 訂單列表 -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">訂單列表 (<span th:text="${#lists.size(orders)}">0</span> 筆)</h5>
+            </div>
+            <div class="card-body">
+                <div th:if="${#lists.isEmpty(orders)}" class="text-center py-5">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">目前沒有訂單</p>
+                </div>
+
+                <div th:if="${!#lists.isEmpty(orders)}" class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>訂單編號</th>
+                                <th>客戶</th>
+                                <th>訂單日期</th>
+                                <th>總金額</th>
+                                <th>訂單狀態</th>
+                                <th>支付狀態</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="order : ${orders}">
+                                <td>
+                                    <a th:href="@{/merchant/orders/{id}(id=${order.id})}" 
+                                       th:text="${order.orderNumber}"
+                                       class="text-decoration-none">
+                                    </a>
+                                </td>
+                                <td th:text="${order.user.username}"></td>
+                                <td th:text="${#temporals.format(order.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
+                                <td class="fw-bold" th:text="'$' + ${#numbers.formatDecimal(order.totalAmount, 1, 2)}"></td>
+                                <td>
+                                    <span class="badge" 
+                                          th:classappend="${order.status.name() == 'PENDING'} ? 'bg-warning' : 
+                                                         (${order.status.name() == 'PROCESSING'} ? 'bg-info' : 
+                                                         (${order.status.name() == 'SHIPPED'} ? 'bg-primary' : 
+                                                         (${order.status.name() == 'DELIVERED'} ? 'bg-success' : 'bg-danger')))"
+                                          th:text="${order.status.name()}">
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge" 
+                                          th:classappend="${order.paymentStatus.name() == 'PAID'} ? 'bg-success' : 
+                                                         (${order.paymentStatus.name() == 'PENDING'} ? 'bg-warning' : 'bg-danger')"
+                                          th:text="${order.paymentStatus.name()}">
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a th:href="@{/merchant/orders/{id}(id=${order.id})}" 
+                                           class="btn btn-outline-primary"
+                                           title="查看詳情">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <button type="button" 
+                                                class="btn btn-outline-success"
+                                                data-bs-toggle="modal" 
+                                                th:data-bs-target="'#updateStatusModal' + ${order.id}"
+                                                title="更新狀態">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </div>
+
+                                    <!-- 更新狀態模態框 -->
+                                    <div class="modal fade" th:id="'updateStatusModal' + ${order.id}" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">更新訂單狀態</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <form th:action="@{/merchant/orders/{id}/update-status(id=${order.id})}" method="post">
+                                                    <div class="modal-body">
+                                                        <p>訂單編號: <strong th:text="${order.orderNumber}"></strong></p>
+                                                        <p>當前狀態: <strong th:text="${order.status.name()}"></strong></p>
+                                                        <div class="mb-3">
+                                                            <label class="form-label">新狀態</label>
+                                                            <select name="status" class="form-select" required>
+                                                                <option th:each="status : ${orderStatuses}" 
+                                                                        th:value="${status}" 
+                                                                        th:text="${status.name()}"
+                                                                        th:selected="${status == order.status}">
+                                                                </option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                                                        <button type="submit" class="btn btn-primary">確認更新</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

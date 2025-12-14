@@ -44,19 +44,34 @@ public class DataInitializer implements CommandLineRunner {
 
         // 創建分類
         Category electronics = new Category();
-        electronics.setName("電子產品");
-        electronics.setDescription("手機、電腦及其他電子設備");
+        electronics.setName("\u96FB\u5B50\u7522\u54C1");
+        electronics.setDescription("\u667A\u80FD\u624B\u6A5F\u3001\u96FB\u8166\u53CA\u5176\u4ED6\u96FB\u5B50\u8A2D\u5099");
         electronics = categoryRepository.save(electronics);
 
         Category accessories = new Category();
-        accessories.setName("配件");
-        accessories.setDescription("電子產品配件");
+        accessories.setName("\u914D\u4EF6");
+        accessories.setDescription("\u96FB\u5B50\u7522\u54C1\u914D\u4EF6");
         accessories = categoryRepository.save(accessories);
+        
+        Category clothing = new Category();
+        clothing.setName("\u670D\u88DD");
+        clothing.setDescription("\u6642\u5C1A\u670D\u98FE");
+        clothing = categoryRepository.save(clothing);
+        
+        Category books = new Category();
+        books.setName("\u66F8\u7C4D");
+        books.setDescription("\u66F8\u7C4D\u548C\u51FA\u7248\u7269");
+        books = categoryRepository.save(books);
+        
+        Category home = new Category();
+        home.setName("\u5BB6\u5C45\u7528\u54C1");
+        home.setDescription("\u5BB6\u96FB\u548C\u751F\u6D3B\u7528\u54C1");
+        home = categoryRepository.save(home);
 
         // 創建商品
         Product product1 = new Product();
         product1.setName("iPhone 15 Pro");
-        product1.setDescription("最新款 iPhone 15 Pro，搭載 A17 Pro 芯片，配備 6.5 英寸超視網膜 XDR 顯示屏，128GB 存儲空間");
+        product1.setDescription("Latest iPhone15 Pro with A17 Pro chip, 6.5-inch Super Retina XDR display, 128GB storage");
         product1.setPrice(new BigDecimal("699.99"));
         product1.setSku("IPHONE-15-PRO-128");
         product1.setStockQuantity(100);
@@ -67,55 +82,55 @@ public class DataInitializer implements CommandLineRunner {
 
         Product product2 = new Product();
         product2.setName("MacBook Pro 16\"");
-        product2.setDescription("強大的 MacBook Pro 16英寸，配備 M3 Pro 芯片，16GB RAM，512GB SSD");
+        product2.setDescription("Powerful MacBook Pro 16-inch with M3 Pro chip, 16GB RAM, 512GB SSD");
         product2.setPrice(new BigDecimal("1299.99"));
         product2.setSku("MACBOOK-PRO-16-512");
         product2.setStockQuantity(50);
-        product2.setImageUrl("/images/products/macbook-pro.jpg");
+        product2.setImageUrl("macbook-pro.jpg");
         product2.setStatus(Product.ProductStatus.ACTIVE);
         product2.setCategory(electronics);
         productRepository.save(product2);
 
         Product product3 = new Product();
         product3.setName("AirPods Pro");
-        product3.setDescription("主動降噪 AirPods Pro，提供沉浸式音質體驗");
+        product3.setDescription("Active Noise Cancelling AirPods Pro with immersive audio experience");
         product3.setPrice(new BigDecimal("249.99"));
         product3.setSku("AIRPODS-PRO-2");
         product3.setStockQuantity(200);
-        product3.setImageUrl("/images/products/airpods-pro.jpg");
+        product3.setImageUrl("airpods-pro.jpg");
         product3.setStatus(Product.ProductStatus.ACTIVE);
         product3.setCategory(accessories);
         productRepository.save(product3);
 
         Product product4 = new Product();
         product4.setName("iPad Air");
-        product4.setDescription("輕薄的 iPad Air，配備 10.9 英寸 Liquid Retina 顯示屏，M1 芯片");
+        product4.setDescription("Lightweight iPad Air with 10.9-inch Liquid Retina display, M1 chip");
         product4.setPrice(new BigDecimal("599.99"));
         product4.setSku("IPAD-AIR-64");
         product4.setStockQuantity(75);
-        product4.setImageUrl("/images/products/ipad-air.jpg");
+        product4.setImageUrl("ipad-air.jpg");
         product4.setStatus(Product.ProductStatus.ACTIVE);
         product4.setCategory(electronics);
         productRepository.save(product4);
 
         Product product5 = new Product();
         product5.setName("Apple Watch Series 9");
-        product5.setDescription("健康和運動追踪的終極工具，配備先進的健康傳感器");
+        product5.setDescription("Ultimate health and fitness tracking tool with advanced health sensors");
         product5.setPrice(new BigDecimal("399.99"));
         product5.setSku("WATCH-S9-45");
         product5.setStockQuantity(120);
-        product5.setImageUrl("/images/products/apple-watch.jpg");
+        product5.setImageUrl("apple-watch.jpg");
         product5.setStatus(Product.ProductStatus.ACTIVE);
         product5.setCategory(accessories);
         productRepository.save(product5);
 
         Product product6 = new Product();
         product6.setName("Magic Keyboard");
-        product6.setDescription("無線藍牙鍵盤，內置可充電電池，優雅設計");
+        product6.setDescription("Wireless Bluetooth keyboard with rechargeable battery, elegant design");
         product6.setPrice(new BigDecimal("99.99"));
         product6.setSku("KEYBOARD-MAGIC");
         product6.setStockQuantity(150);
-        product6.setImageUrl("/images/products/magic-keyboard.jpg");
+        product6.setImageUrl("magic-keyboard.jpg");
         product6.setStatus(Product.ProductStatus.ACTIVE);
         product6.setCategory(accessories);
         productRepository.save(product6);
@@ -126,8 +141,8 @@ public class DataInitializer implements CommandLineRunner {
             admin.setUsername("admin");
             admin.setPassword(passwordEncoder.encode("admin123"));
             admin.setEmail("admin@example.com");
-            admin.setFirstName("管理員");
-            admin.setLastName("系統");
+            admin.setFirstName("Admin");
+            admin.setLastName("User");
             admin.setRole(User.UserRole.ADMIN);
             userRepository.save(admin);
 
@@ -135,14 +150,14 @@ public class DataInitializer implements CommandLineRunner {
             customer.setUsername("customer");
             customer.setPassword(passwordEncoder.encode("customer123"));
             customer.setEmail("customer@example.com");
-            customer.setFirstName("測試");
-            customer.setLastName("用戶");
+            customer.setFirstName("Test");
+            customer.setLastName("Customer");
             customer.setRole(User.UserRole.CUSTOMER);
             userRepository.save(customer);
 
             System.out.println("已創建測試用戶:");
             System.out.println("管理員 - username: admin, password: admin123");
-            System.out.println("  顧客 - username: customer, password: customer123");
+            System.out.println("顧客 - username: customer, password: customer123");
         }
 
         System.out.println("數據初始化完成！已創建 " + productRepository.count() + " 個商品");

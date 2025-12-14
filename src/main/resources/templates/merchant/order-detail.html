@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>訂單詳情 - 商家後台</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container mt-4">
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <h2><i class="fas fa-file-invoice"></i> 訂單詳情</h2>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a th:href="@{/}">首頁</a></li>
+                        <li class="breadcrumb-item"><a th:href="@{/merchant/orders}">訂單管理</a></li>
+                        <li class="breadcrumb-item active" th:text="${order.orderNumber}">訂單編號</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+
+        <div class="row">
+            <!--訂單信息 -->
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-headerd-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">訂單信息</h5>
+                        <div>
+                            <span class="badge"
+                                  th:classappend="${order.status.name() == 'PENDING'} ? 'bg-warning' : 
+                                (${order.status.name() == 'PROCESSING'} ? 'bg-info' : 
+                                                 (${order.status.name() == 'SHIPPED'} ? 'bg-primary' : 
+                                                 (${order.status.name() == 'DELIVERED'} ? 'bg-success' : 'bg-danger')))"
+                                  th:text="${order.status.name()}">
+                            </span>
+                            <span class="badge ms-2" 
+                                  th:classappend="${order.paymentStatus.name() == 'PAID'} ? 'bg-success' : 
+                                                 (${order.paymentStatus.name() == 'PENDING'} ? 'bg-warning' : 'bg-danger')"
+                                  th:text="${order.paymentStatus.name()}">
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <p><strong>訂單編號:</strong> <span th:text="${order.orderNumber}"></span></p>
+                                <p><strong>訂單日期:</strong> <span th:text="${#temporals.format(order.createdAt, 'yyyy-MM-dd HH:mm:ss')}"></span></p>
+                                <p><strong>客戶姓名:</strong> <span th:text="${order.user.username}"></span></p>
+                </div>
+                            <div class="col-md-6">
+                                <p><strong>收件人:</strong> <span th:text="${order.shippingName}"></span></p>
+                                <p><strong>聯絡電話:</strong> <span th:text="${order.shippingPhone}"></span></p>
+                                <p><strong>收件地址:</strong> <span th:text="${order.shippingAddress}"></span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 訂單商品 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">訂單商品</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                <tr>
+                                        <th>商品</th>
+                                        <th class="text-center">單價</th>
+                                        <th class="text-center">數量</th>
+                                        <th class="text-end">小計</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="item : ${order.orderItems}">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img th:src="${item.product.imageUrl}" 
+                                                     th:alt="${item.product.name}"
+                                                     class="me-3" 
+                                                     style="width: 50px; height: 50px; object-fit: cover;">
+                                                <div>
+                                                    <div th:text="${item.product.name}"></div>
+                                                    <small class="text-muted" th:text="${item.product.category.name}"></small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center" th:text="'$' + ${#numbers.formatDecimal(item.price, 1, 2)}"></td>
+                                        <td class="text-center" th:text="${item.quantity}"></td>
+                                        <td class="text-end fw-bold" th:text="'$' + ${#numbers.formatDecimal(item.subtotal, 1, 2)}"></td>
+                                    </tr>
+                                </tbody><tfoot>
+                                    <tr>
+                                        <td colspan="3" class="text-end"><strong>總計:</strong></td>
+                                        <td class="text-end">
+                                            <h5 class="mb-0 text-primary" th:text="'$' + ${#numbers.formatDecimal(order.totalAmount, 1, 2)}"></h5>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 操作面板 -->
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">訂單操作</h5>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/merchant/orders/{id}/update-status(id=${order.id})}" method="post">
+                            <div class="mb-3">
+                                <label class="form-label">更新訂單狀態</label>
+                                <select name="status" class="form-select">
+                                    <option value="PENDING" th:selected="${order.status.name() == 'PENDING'}">待處理</option>
+                                    <option value="PROCESSING" th:selected="${order.status.name() == 'PROCESSING'}">處理中</option>
+                                    <option value="SHIPPED" th:selected="${order.status.name() == 'SHIPPED'}">已發貨</option>
+                                    <option value="DELIVERED" th:selected="${order.status.name() == 'DELIVERED'}">已送達</option>
+                                    <option value="CANCELLED" th:selected="${order.status.name() == 'CANCELLED'}">已取消</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-save"></i> 更新狀態
+                            </button>
+                        </form>
+
+                        <hr>
+
+                        <div class="d-grid gap-2">
+                            <a th:href="@{/merchant/orders}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> 返回列表
+                            </a></div>
+                    </div>
+                </div>
+
+                <!--訂單統計 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">訂單統計</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <small class="text-muted">商品種類</small>
+                            <h4 th:text="${#lists.size(order.orderItems)} + ' 種'"></h4>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted">商品總數</small>
+                            <h4 th:text="${#aggregates.sum(order.orderItems.![quantity])} + ' 件'"></h4>
+                        </div>
+                        <div>
+                            <small class="text-muted">訂單金額</small>
+                            <h4 class="text-primary" th:text="'$' + ${#numbers.formatDecimal(order.totalAmount, 1, 2)}"></h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
