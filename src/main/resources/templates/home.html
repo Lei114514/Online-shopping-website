@@ -30,7 +30,7 @@
                 <div class="col-md-4 mb-4" th:each="product : ${topProducts}">
                     <div class="card h-100">
                         <img th:if="${product.imageUrl}"
-                             th:src="@{'/api/images/' + ${product.imageUrl}}"
+                             th:src="@{'/images/products/' + ${product.imageUrl}}"
                              class="card-img-top"
                              th:alt="${product.name}"
                              style="height: 250px; object-fit: cover;">

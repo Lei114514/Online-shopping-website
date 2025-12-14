@@ -1,10 +1,10 @@
 package com.onlineshop.controller;
 
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -22,8 +25,8 @@ import java.util.concurrent.TimeUnit;
 @RequestMapping("/images/products")
 public class ImageController {
 
-    // 圖片存儲的基礎路徑
-    private static final String IMAGE_DIRECTORY = "static/images/products/";
+    @Value("${upload.path:src/main/resources/static/images/products}")
+    private String uploadPath;
 
     /**
      * 獲取產品圖片
@@ -33,31 +36,46 @@ public class ImageController {
     @GetMapping("/{filename:.+}")
     public ResponseEntity<Resource> getProductImage(@PathVariable String filename) {
         try {
-            // 從classpath 讀取圖片資源
-            Resource resource = new ClassPathResource(IMAGE_DIRECTORY + filename);
+            // 構建圖片文件路徑
+            Path imagePath = Paths.get(uploadPath).resolve(filename);
+            File imageFile = imagePath.toFile();
             
-            if (!resource.exists() || !resource.isReadable()) {
-                // 返回 404 而不是錯誤，這樣不會破壞頁面
+            System.out.println("=== ImageController Debug ===");
+            System.out.println("Requested filename: " + filename);
+            System.out.println("Upload path: " + uploadPath);
+            System.out.println("Full image path: " + imagePath.toAbsolutePath());
+            System.out.println("File exists: " + imageFile.exists());
+            System.out.println("File readable: " + imageFile.canRead());
+            System.out.println("File size: " + (imageFile.exists() ? imageFile.length() : 0) + " bytes");
+            
+            if (!imageFile.exists() || !imageFile.canRead()) {
+                System.err.println("Image not found or not readable: " + imagePath);
                 return ResponseEntity.notFound().build();
             }
 
-            // 確定檔案的 MIME 類型
+            // 創建文件系統資源
+            Resource resource = new FileSystemResource(imageFile);
+
+            // 確定檔案的MIME 類型
             String contentType = determineContentType(filename);
+            System.out.println("Content type: " + contentType);
 
             // 設置緩存控制
             CacheControl cacheControl = CacheControl.maxAge(1, TimeUnit.HOURS)
                     .cachePublic();
 
+            System.out.println("Successfully serving image: " + filename);
+            
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(contentType))
                     .cacheControl(cacheControl)
                     .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
                     .header(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*")
-                    .body(resource);
-                    
+                    .body(resource);    
         } catch (Exception e) {
             // 記錄錯誤但不拋出異常，返回 404
-            System.err.println("Error loading image: " + filename + " - " + e.getMessage());
+            System.err.println("Error loading image: " + filename);
+            e.printStackTrace();
             return ResponseEntity.notFound().build();
         }
     }

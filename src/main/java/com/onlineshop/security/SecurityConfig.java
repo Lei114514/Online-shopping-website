@@ -79,7 +79,7 @@ public class SecurityConfig {
                 .accessDeniedPage("/access-denied")
             )
             .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/api/**") // API端點禁用CSRF
+                .ignoringRequestMatchers("/api/**", "/images/**") // API端點和圖片請求禁用CSRF
             )
             .headers(headers -> headers
                 // 配置內容安全策略（僅使用本地資源）

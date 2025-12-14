@@ -2,247 +2,266 @@
 
 ## 概述
 
-本系統已配置為使用本地文件系統存儲商品圖片,而非從網絡 URL 獲取。
+本文檔說明如何配置圖片存儲，使圖片數據存儲在本地而不是從網址獲取。
 
 ## 存儲路徑
 
-### 主要存儲位置
+### 本地開發環境
 
-**本地存儲根目錄:**
+**圖片存儲位置：**
 ```
-src/main/resources/static/images/products/
+項目根目錄/src/main/resources/static/images/products/
 ```
 
-**完整路徑:**
+**完整路徑示例：**
 ```
 /home/lei/project/onlineShopping/src/main/resources/static/images/products/
 ```
 
-### 訪問路徑
+### Docker 容器環境
 
-圖片可通過以下 URL 路徑訪問:
-- API 路徑: `/api/images/{filename}`
-- 靜態資源路徑: `/images/products/{filename}`
-
-## 文件結構
-
+**容器內部路徑：**
 ```
-src/main/resources/static/images/products/
-├── iphone-15-pro.jpg          # 示例商品圖片
-├── README.md                  # 圖片目錄說明
-└── [其他商品圖片...]
+/app/src/main/resources/static/images/products/
 ```
 
-## 配置細節
+**重要：** 為了讓容器內上傳的圖片在本地可見，需要配置 Docker volume 掛載。
 
-### 1.圖片控制器 (ImageController)
+## Docker Volume 配置
 
-位置: `src/main/java/com/onlineshop/controller/ImageController.java`
+### 1. 修改 docker-compose.yml
 
-功能:
-- 處理圖片請求
-- 從本地文件系統讀取圖片
-- 設置正確的 Content-Type
-- 返回圖片字節流
+在 `docker-compose.yml` 文件中添加 volume 掛載：
 
-```java
-@GetMapping("/{filename:.+}")
-public ResponseEntity<byte[]> getImage(@PathVariable String filename) {
-    // 從本地讀取圖片文件
-    Path imagePath = Paths.get("src/main/resources/static/images/products/" + filename);
-    // ...
-}
+```yaml
+services:
+  app:
+    volumes:
+      - uploads:/app/uploads
+      # 掛載本地圖片目錄到容器
+      - ./src/main/resources/static/images/products:/app/src/main/resources/static/images/products
 ```
 
-### 2. 靜態資源配置 (WebMvcConfig)
+### 2. 重啟容器並同步現有圖片
 
-位置: `src/main/java/com/onlineshop/config/WebMvcConfig.java`
+使用提供的腳本重啟容器：
 
-功能:
-- 配置靜態資源處理器
-- 映射 `/images/**` 到本地目錄
-- 啟用資源緩存
-
-```java
-@Override
-public void addResourceHandlers(ResourceHandlerRegistry registry) {
-    registry.addResourceHandler("/images/**")
-            .addResourceLocations("classpath:/static/images/")
-            .setCachePeriod(3600);
-}
+```bash
+chmod +x restart-with-volume.sh
+./restart-with-volume.sh
 ```
 
-### 3. 安全配置 (SecurityConfig)
+該腳本會：
+1. 停止現有容器
+2. 從容器複製現有圖片到本地
+3. 使用新的 volume 配置重啟容器
+4. 驗證同步是否成功
 
-位置: `src/main/java/com/onlineshop/security/SecurityConfig.java`
+## 圖片訪問方式
 
-圖片訪問路徑已配置為公開訪問:
-```java
-.requestMatchers("/api/images/**", "/images/**").permitAll()
+### URL 路徑
+
+圖片通過以下 URL 訪問：
+
+```
+http://localhost:8080/images/products/{filename}
 ```
 
-### 4. 數據初始化 (DataInitializer)
-
-位置: `src/main/java/com/onlineshop/config/DataInitializer.java`
-
-示例商品使用本地圖片路徑:
-```java
-Product iphone = new Product();
-iphone.setImageUrl("/api/images/iphone-15-pro.jpg");
+**示例：**
+```
+http://localhost:8080/images/products/iphone-15-pro.jpg
+http://localhost:8080/images/products/e136ab3b-b953-4ce0-b9c7-1f8aced4ea34.png
 ```
 
-## 使用方法
+### 在模板中使用
 
-### 添加新商品圖片
-
-1. **將圖片文件放入存儲目錄:**
-   ```bash
-   cp your-product-image.jpg src/main/resources/static/images/products/
-   ```
-
-2. **在數據庫中引用圖片:**
-   ```java
-   product.setImageUrl("/api/images/your-product-image.jpg");
-   ```
-
-3. **在模板中顯示圖片:**
-   ```html
-   <img th:src="${product.imageUrl}" alt="商品圖片">
-   ```
-
-### 支持的圖片格式
-
-- JPEG/JPG (`.jpg`, `.jpeg`)
-- PNG (`.png`)
-- GIF (`.gif`)
-- WebP (`.webp`)
-- SVG (`.svg`)
-- BMP (`.bmp`)
-- ICO (`.ico`)
-- TIFF (`.tif`, `.tiff`)
-- AVIF (`.avif`)
-
-##訪問示例
-
-### 通過 API 訪問
-```
-GET http://localhost:8080/api/images/iphone-15-pro.jpg
-```
-
-### 通過靜態資源訪問
-```
-GET http://localhost:8080/images/products/iphone-15-pro.jpg
-```
-
-### 在 HTML 模板中使用
 ```html
-<!-- 使用 API 路徑 (推薦) -->
-<img th:src="${product.imageUrl}" alt="商品圖片">
+<!-- 使用 Thymeleaf -->
+<img th:src="@{/images/products/{filename}(filename=${product.imageUrl})}" 
+     alt="Product Image">
 
-<!-- 或直接使用靜態路徑 -->
-<img src="/images/products/iphone-15-pro.jpg" alt="商品圖片">
+<!-- 直接使用 -->
+<img src="/images/products/iphone-15-pro.jpg" alt="Product">
 ```
 
-## Docker 環境配置
+## 圖片上傳流程
 
-在 Docker 容器中,圖片文件會被包含在應用 JAR 包內:
+### 1. 商家上傳圖片
 
-### Dockerfile 配置
-```dockerfile
-# 複製資源文件(包括圖片)
-COPY src ./src
+商家在產品表單中選擇圖片文件：
 
-# 打包時會包含所有資源
-RUN mvn clean package -DskipTests
+```html
+<input type="file" name="imageFile" accept="image/*">
 ```
 
-### 注意事項
-- 圖片文件會被打包到 JAR 文件中
-- 容器啟動後,圖片從JAR 內的資源目錄提供
-- 大型圖片庫建議使用外部存儲卷掛載
+### 2. 後端處理
 
-## 性能優化建議
+[`MerchantProductController.java`](../src/main/java/com/onlineshop/controller/MerchantProductController.java) 處理上傳：
+
+```java
+private String saveProductImage(MultipartFile imageFile) throws IOException {
+    // 生成唯一文件名
+    String filename = UUID.randomUUID().toString() + 
+                     getFileExtension(imageFile.getOriginalFilename());
+    
+    // 構建完整路徑
+    Path uploadPath = Paths.get(uploadDir);
+    Path filePath = uploadPath.resolve(filename);
+    
+    // 保存文件
+    Files.copy(imageFile.getInputStream(), filePath, 
+               StandardCopyOption.REPLACE_EXISTING);
+    
+    return filename;
+}
+```
+
+### 3. 存儲到數據庫
+
+只存儲文件名（不是完整路徑）：
+
+```java
+product.setImageUrl(filename);  // 例如: "e136ab3b-b953-4ce0-b9c7-1f8aced4ea34.png"
+```
+
+## 配置文件
+
+### application.properties
+
+```properties
+# 圖片上傳配置
+upload.path=src/main/resources/static/images/products
+spring.servlet.multipart.max-file-size=10MB
+spring.servlet.multipart.max-request-size=10MB
+```
+
+## 目錄結構
+
+```
+onlineShopping/
+├── src/
+│   └── main/
+│       └── resources/
+│           └── static/
+│               └── images/
+│                   └── products/          # 圖片存儲目錄
+│                       ├── iphone-15-pro.jpg
+│                       ├── e136ab3b-xxx.png
+│                       └── README.md
+├── docker-compose.yml                     # Docker 配置
+└── restart-with-volume.sh                 # 重啟腳本
+```
+
+## 驗證配置
+
+### 1. 檢查本地目錄
+
+```bash
+ls -la src/main/resources/static/images/products/
+```
+
+### 2. 檢查容器內目錄
+
+```bash
+docker exec <container_id> ls -la /app/src/main/resources/static/images/products/
+```
+
+### 3. 測試上傳
+
+1. 登入商家帳號
+2. 進入產品管理頁面
+3. 創建或編輯產品
+4. 上傳圖片
+5. 檢查本地目錄是否出現新圖片
+
+### 4. 測試訪問
+
+在瀏覽器訪問：
+```
+http://localhost:8080/images/products/<filename>
+```
+
+## 常見問題
+
+### Q1: 上傳的圖片在容器內但本地看不到？
+
+**原因：** 沒有配置 Docker volume 掛載
+
+**解決：**
+1. 修改 `docker-compose.yml` 添加 volume 掛載
+2. 運行 `./restart-with-volume.sh` 重啟容器
+
+### Q2: 圖片無法訪問（404 錯誤）？
+
+**檢查：**
+1. 文件是否存在於 `static/images/products/` 目錄
+2. 文件名是否正確
+3. Spring Boot 靜態資源配置是否正確
+
+### Q3: 上傳失敗？
+
+**檢查：**
+1. 目錄權限是否正確
+2. 文件大小是否超過限制（默認 10MB）
+3. 查看應用日誌獲取詳細錯誤信息
+
+## 安全考慮
+
+### 1. 文件類型驗證
+
+只允許圖片文件：
+
+```java
+private static final Set<String> ALLOWED_EXTENSIONS = 
+    Set.of(".jpg", ".jpeg", ".png", ".gif", ".webp");
+```
+
+### 2. 文件大小限制
+
+在 `application.properties` 中配置：
+
+```properties
+spring.servlet.multipart.max-file-size=10MB
+spring.servlet.multipart.max-request-size=10MB
+```
+
+### 3. 文件名處理
+
+使用 UUID 生成唯一文件名，避免：
+- 文件名衝突
+- 路徑遍歷攻擊
+- 特殊字符問題
+
+## 優化建議
 
 ### 1. 圖片壓縮
-建議在上傳前壓縮圖片:
-- JPEG: 85% 質量
-- PNG: 使用工具如 pngquant
-- 推薦尺寸: 最大 1920x1080
 
-### 2. 使用 CDN (生產環境)
-生產環境建議:
-- 將圖片上傳到 CDN
-- 更新`imageUrl` 為 CDN 地址
-- 保留本地備份
+考慮在上傳時自動壓縮圖片以節省空間和提高加載速度。
 
-### 3. 緩存配置
-已在 `WebMvcConfig` 中設置緩存:
-```java
-.setCachePeriod(3600)  // 緩存 1 小時
-```
+### 2. CDN 部署
 
-## 故障排查
+生產環境建議使用 CDN 服務（如阿里雲 OSS、AWS S3）來存儲和分發圖片。
 
-### 圖片無法顯示
+### 3. 縮略圖生成
 
-1. **檢查文件是否存在:**
-   ```bash
-   ls -la src/main/resources/static/images/products/
-   ```
+自動生成不同尺寸的縮略圖以優化頁面加載。
 
-2. **檢查文件權限:**
-   ```bash
-   chmod 644 src/main/resources/static/images/products/*.jpg
-   ```
+### 4. 定期清理
 
-3. **檢查路徑配置:**
-   - 確認 `imageUrl` 格式正確
-   - 檢查 `WebMvcConfig` 資源映射
-   - 驗證 `SecurityConfig` 權限設置
-
-4. **查看應用日誌:**
-   ```bash
-   docker logs onlineshopping-app
-   ```
-
-### 404 錯誤
-
-如果訪問圖片返回 404:
-- 檢查圖片文件名是否正確
-- 確認路徑大小寫匹配
-- 驗證文件確實存在於指定目錄
-
-### 權限錯誤
-
-如果返回 403:
-- 檢查 `SecurityConfig` 中的權限配置
-- 確認路徑已添加到 `permitAll()` 列表
-
-## 遷移現有數據
-
-如果需要從網絡 URL 遷移到本地存儲:
-
-```sql
--- 下載圖片後更新數據庫
-UPDATE products
-SET image_url = '/api/images/product-' || id || '.jpg' 
-WHERE image_url LIKE 'http%';
-```
+定期清理未使用的圖片文件以節省存儲空間。
 
 ## 相關文檔
 
-- [圖片存儲指南](IMAGE_STORAGE_GUIDE.md)
+- [圖片上傳功能說明](IMAGE_UPLOAD_STORAGE.md)
 - [本地資源配置](LOCAL_RESOURCES.md)
-- [資源加載修復](RESOURCE_LOADING_FIX.md)
+- [Docker 日誌查看指南](VIEW_DOCKER_LOGS_GUIDE.md)
 
 ## 總結
 
-本系統已完整配置為使用本地文件系統存儲商品圖片:
+通過配置 Docker volume 掛載，圖片數據現在：
+- ✅ 存儲在本地文件系統
+- ✅ 容器和主機之間自動同步
+- ✅ 重啟容器後數據不會丟失
+- ✅ 可以直接在本地查看和管理圖片文件
 
-✅ 存儲路徑: `src/main/resources/static/images/products/`  
-✅ API訪問: `/api/images/{filename}`  
-✅ 靜態訪問: `/images/products/{filename}`  
-✅ 安全配置: 公開訪問  
-✅ Docker 支持: JAR 包內資源  
-
-所有圖片均從本地存儲讀取,不再依賴外部網絡 URL。
+**存儲路徑：** `src/main/resources/static/images/products/`

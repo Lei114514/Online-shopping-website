@@ -17,10 +17,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
      */
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // 配置圖片資源
-        registry.addResourceHandler("/images/**")
-                .addResourceLocations("classpath:/static/images/")
-                .setCachePeriod(3600);
+        // 注意：/images/products/** 由 ImageController 處理，不在這裡配置
         
         // 配置 CSS 資源
         registry.addResourceHandler("/css/**")
