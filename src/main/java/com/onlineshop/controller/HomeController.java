@@ -36,9 +36,9 @@ public class HomeController {
         //獲取熱銷商品
         List<Product> topProducts = productService.getTopSellingProducts();
         
-        // 如果數據庫沒有數據，使用測試數據
-        if (topProducts == null || topProducts.isEmpty()) {
-            topProducts = createSampleProducts();
+        // 如果數據庫沒有數據，顯示空列表
+        if (topProducts == null) {
+            topProducts = new ArrayList<>();
         }
         
         model.addAttribute("topProducts", topProducts);
@@ -75,9 +75,9 @@ public class HomeController {
             products = productService.getAllProducts();
         }
         
-        // 如果沒有數據，使用測試數據
-        if (products == null || products.isEmpty()) {
-            products = createSampleProducts();
+        // 不再使用測試數據 - 如果沒有商品就顯示空列表
+        if (products == null) {
+            products = new ArrayList<>();
         }
         
         // 添加分類列表
@@ -94,11 +94,10 @@ public class HomeController {
     public String productDetail(@PathVariable Long id, Model model) {
         try {
             Product product = productService.getProductById(id);
-            model.addAttribute("product", product);} catch (Exception e) {
-            // 如果找不到商品，使用測試數據
-            Product product = createSampleProducts().get(0);
-            product.setId(id);
             model.addAttribute("product", product);
+        } catch (Exception e) {
+            // 商品不存在，返回錯誤頁面
+            return "redirect:/products?error=notfound";
         }
         return "product-detail";
     }
@@ -127,45 +126,4 @@ public class HomeController {
         return "access-denied";
     }
     
-    /**
-     * 創建測試商品數據
-     */
-    private List<Product> createSampleProducts() {
-        List<Product> products = new ArrayList<>();
-        
-        Product product1 = new Product();
-        product1.setId(1L);
-        product1.setName("iPhone 15 Pro");
-        product1.setDescription("Latest iPhone 15 Pro with A17 Pro chip, 6.5-inch Super Retina XDR display, 128GB storage");
-        product1.setPrice(new BigDecimal("699.99"));
-        product1.setSku("IPHONE-15-PRO-128");
-        product1.setStockQuantity(100);
-        product1.setImageUrl("https://images.unsplash.com/photo-1678685888221-cda1673efe2e?w=400&h=300&fit=crop");
-        product1.setStatus(Product.ProductStatus.ACTIVE);
-        products.add(product1);
-        
-        Product product2 = new Product();
-        product2.setId(2L);
-        product2.setName("MacBook Pro 16\"");
-        product2.setDescription("Powerful MacBook Pro 16-inch with M3 Pro chip, 16GB RAM, 512GB SSD");
-        product2.setPrice(new BigDecimal("1299.99"));
-        product2.setSku("MACBOOK-PRO-16-512");
-        product2.setStockQuantity(50);
-        product2.setImageUrl("https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&h=300&fit=crop");
-        product2.setStatus(Product.ProductStatus.ACTIVE);
-        products.add(product2);
-        
-        Product product3 = new Product();
-        product3.setId(3L);
-        product3.setName("AirPods Pro");
-        product3.setDescription("Active Noise Cancelling AirPods Pro with immersive audio experience");
-        product3.setPrice(new BigDecimal("249.99"));
-        product3.setSku("AIRPODS-PRO-2");
-        product3.setStockQuantity(200);
-        product3.setImageUrl("https://images.unsplash.com/photo-1606841837239-c5a1a4a07af7?w=400&h=300&fit=crop");
-        product3.setStatus(Product.ProductStatus.ACTIVE);
-        products.add(product3);
-        
-        return products;
-    }
 }

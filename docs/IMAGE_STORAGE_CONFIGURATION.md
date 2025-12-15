@@ -1,267 +1,381 @@
-# 圖片存儲配置說明
+# 圖片存儲配置完整說明
 
 ## 概述
 
-本文檔說明如何配置圖片存儲，使圖片數據存儲在本地而不是從網址獲取。
+本系統已配置為使用**本地文件系統存儲**來管理商品圖片，而不是使用外部URL。所有圖片數據都存儲在項目目錄中，並通過Docker卷映射實現持久化。
 
-## 存儲路徑
+## 存儲路徑結構
 
-### 本地開發環境
+### 1. 本地開發環境路徑
 
-**圖片存儲位置：**
 ```
-項目根目錄/src/main/resources/static/images/products/
-```
-
-**完整路徑示例：**
-```
-/home/lei/project/onlineShopping/src/main/resources/static/images/products/
-```
-
-### Docker 容器環境
-
-**容器內部路徑：**
-```
-/app/src/main/resources/static/images/products/
+項目根目錄/
+└── src/
+    └── main/
+        └── resources/
+            └── static/
+                └── images/
+                    └── products/     ← 商品圖片存儲目錄
+                        ├── iphone-15-pro.jpg
+                        ├── product-123.jpg
+                        └── ...
 ```
 
-**重要：** 為了讓容器內上傳的圖片在本地可見，需要配置 Docker volume 掛載。
+**絕對路徑**: `/home/lei/project/onlineShopping/src/main/resources/static/images/products/`
 
-## Docker Volume 配置
+### 2. Docker容器內部路徑
 
-### 1. 修改 docker-compose.yml
+```
+/app/
+└── uploads/
+    └── products/     ← 容器內圖片存儲目錄
+        ├── iphone-15-pro.jpg
+        ├── product-123.jpg
+        └── ...
+```
 
-在 `docker-compose.yml` 文件中添加 volume 掛載：
+**容器內路徑**: `/app/uploads/products/`
+
+### 3. 路徑映射關係
+
+通過 `docker-compose.yml` 配置的卷映射：
 
 ```yaml
-services:
-  app:
-    volumes:
-      - uploads:/app/uploads
-      # 掛載本地圖片目錄到容器
-      - ./src/main/resources/static/images/products:/app/src/main/resources/static/images/products
+volumes:
+  - ./src/main/resources/static/images/products:/app/uploads/products
 ```
 
-### 2. 重啟容器並同步現有圖片
+這意味著：
+- 本地的 `./src/main/resources/static/images/products` 
+- 映射到容器的 `/app/uploads/products`
+- 任何一方的修改都會同步到另一方
 
-使用提供的腳本重啟容器：
-
-```bash
-chmod +x restart-with-volume.sh
-./restart-with-volume.sh
-```
-
-該腳本會：
-1. 停止現有容器
-2. 從容器複製現有圖片到本地
-3. 使用新的 volume 配置重啟容器
-4. 驗證同步是否成功
-
-## 圖片訪問方式
-
-### URL 路徑
-
-圖片通過以下 URL 訪問：
-
-```
-http://localhost:8080/images/products/{filename}
-```
-
-**示例：**
-```
-http://localhost:8080/images/products/iphone-15-pro.jpg
-http://localhost:8080/images/products/e136ab3b-b953-4ce0-b9c7-1f8aced4ea34.png
-```
-
-### 在模板中使用
-
-```html
-<!-- 使用 Thymeleaf -->
-<img th:src="@{/images/products/{filename}(filename=${product.imageUrl})}" 
-     alt="Product Image">
-
-<!-- 直接使用 -->
-<img src="/images/products/iphone-15-pro.jpg" alt="Product">
-```
-
-## 圖片上傳流程
-
-### 1. 商家上傳圖片
-
-商家在產品表單中選擇圖片文件：
-
-```html
-<input type="file" name="imageFile" accept="image/*">
-```
-
-### 2. 後端處理
-
-[`MerchantProductController.java`](../src/main/java/com/onlineshop/controller/MerchantProductController.java) 處理上傳：
-
-```java
-private String saveProductImage(MultipartFile imageFile) throws IOException {
-    // 生成唯一文件名
-    String filename = UUID.randomUUID().toString() + 
-                     getFileExtension(imageFile.getOriginalFilename());
-    
-    // 構建完整路徑
-    Path uploadPath = Paths.get(uploadDir);
-    Path filePath = uploadPath.resolve(filename);
-    
-    // 保存文件
-    Files.copy(imageFile.getInputStream(), filePath, 
-               StandardCopyOption.REPLACE_EXISTING);
-    
-    return filename;
-}
-```
-
-### 3. 存儲到數據庫
-
-只存儲文件名（不是完整路徑）：
-
-```java
-product.setImageUrl(filename);  // 例如: "e136ab3b-b953-4ce0-b9c7-1f8aced4ea34.png"
-```
-
-## 配置文件
+## 配置文件說明
 
 ### application.properties
 
 ```properties
 # 圖片上傳配置
-upload.path=src/main/resources/static/images/products
+file.upload-dir=/app/uploads/products
 spring.servlet.multipart.max-file-size=10MB
 spring.servlet.multipart.max-request-size=10MB
 ```
 
-## 目錄結構
+**關鍵配置**:
+- `file.upload-dir`: 指定上傳文件的存儲目錄（容器內路徑）
+- `max-file-size`: 單個文件最大 10MB
+- `max-request-size`: 整個請求最大 10MB
 
-```
-onlineShopping/
-├── src/
-│   └── main/
-│       └── resources/
-│           └── static/
-│               └── images/
-│                   └── products/          # 圖片存儲目錄
-│                       ├── iphone-15-pro.jpg
-│                       ├── e136ab3b-xxx.png
-│                       └── README.md
-├── docker-compose.yml                     # Docker 配置
-└── restart-with-volume.sh                 # 重啟腳本
-```
+## 數據庫存儲方式
 
-## 驗證配置
-
-### 1. 檢查本地目錄
-
-```bash
-ls -la src/main/resources/static/images/products/
-```
-
-### 2. 檢查容器內目錄
-
-```bash
-docker exec <container_id> ls -la /app/src/main/resources/static/images/products/
-```
-
-### 3. 測試上傳
-
-1. 登入商家帳號
-2. 進入產品管理頁面
-3. 創建或編輯產品
-4. 上傳圖片
-5. 檢查本地目錄是否出現新圖片
-
-### 4. 測試訪問
-
-在瀏覽器訪問：
-```
-http://localhost:8080/images/products/<filename>
-```
-
-## 常見問題
-
-### Q1: 上傳的圖片在容器內但本地看不到？
-
-**原因：** 沒有配置 Docker volume 掛載
-
-**解決：**
-1. 修改 `docker-compose.yml` 添加 volume 掛載
-2. 運行 `./restart-with-volume.sh` 重啟容器
-
-### Q2: 圖片無法訪問（404 錯誤）？
-
-**檢查：**
-1. 文件是否存在於 `static/images/products/` 目錄
-2. 文件名是否正確
-3. Spring Boot 靜態資源配置是否正確
-
-### Q3: 上傳失敗？
-
-**檢查：**
-1. 目錄權限是否正確
-2. 文件大小是否超過限制（默認 10MB）
-3. 查看應用日誌獲取詳細錯誤信息
-
-## 安全考慮
-
-### 1. 文件類型驗證
-
-只允許圖片文件：
+### Product實體中的 imageUrl 欄位
 
 ```java
-private static final Set<String> ALLOWED_EXTENSIONS = 
-    Set.of(".jpg", ".jpeg", ".png", ".gif", ".webp");
+@Column(name = "image_url", length = 500)
+private String imageUrl;
 ```
 
-### 2. 文件大小限制
+**存儲內容**: 只存儲**文件名**，不存儲完整路徑
 
-在 `application.properties` 中配置：
+**示例**:
+-✅ 正確: `iphone-15-pro.jpg`
+- ❌ 錯誤: `/images/products/iphone-15-pro.jpg`
+- ❌ 錯誤: `http://example.com/images/iphone-15-pro.jpg`
 
-```properties
-spring.servlet.multipart.max-file-size=10MB
-spring.servlet.multipart.max-request-size=10MB
+### 為什麼只存儲文件名？
+
+1. **靈活性**: 如果更改存儲路徑或域名，無需更新數據庫
+2. **簡潔性**: 減少數據冗餘
+3. **安全性**: 不暴露實際文件系統路徑
+
+## 圖片訪問流程
+
+### 1. 圖片上傳流程
+
+```
+用戶上傳圖片↓
+MerchantProductController.saveProduct()
+    ↓
+處理 MultipartFile
+    ↓
+生成唯一文件名（時間戳 + 原文件名）
+    ↓
+保存到 /app/uploads/products/
+    ↓
+數據庫只存儲文件名
 ```
 
-### 3. 文件名處理
+### 2. 圖片顯示流程
 
-使用 UUID 生成唯一文件名，避免：
-- 文件名衝突
-- 路徑遍歷攻擊
-- 特殊字符問題
+```
+前端模板請求圖片
+    ↓
+使用路徑: /images/products/{filename}
+    ↓
+Spring Static Resources 處理
+    ↓
+從 /app/uploads/products/{filename} 讀取
+    ↓
+返回圖片給瀏覽器
+```
 
-## 優化建議
+### 3. 實際代碼示例
 
-### 1. 圖片壓縮
+**上傳代碼** (`MerchantProductController.java`):
+```java
+@PostMapping("/save")
+public String saveProduct(@ModelAttribute Product product,
+                         @RequestParam("imageFile") MultipartFile imageFile) {
+    if (!imageFile.isEmpty()) {
+        String uploadDir = "/app/uploads/products";
+        String filename = System.currentTimeMillis() + "_" + imageFile.getOriginalFilename();
+        Path filepath = Paths.get(uploadDir, filename);
+        Files.write(filepath, imageFile.getBytes());
+        
+        // 只存儲文件名
+        product.setImageUrl(filename);
+    }
+    productService.saveProduct(product);
+}
+```
 
-考慮在上傳時自動壓縮圖片以節省空間和提高加載速度。
+**模板顯示代碼** (`product-detail.html`):
+```html
+<img th:src="@{/images/products/{filename}(filename=${product.imageUrl})}" 
+     class="img-fluid" 
+     th:alt="${product.name}">
+```
 
-### 2. CDN 部署
+**生成的HTML**:
+```html
+<img src="/images/products/1702560000000_iphone-15-pro.jpg" 
+     class="img-fluid" 
+     alt="iPhone 15 Pro">
+```
 
-生產環境建議使用 CDN 服務（如阿里雲 OSS、AWS S3）來存儲和分發圖片。
+## 靜態資源配置
 
-### 3. 縮略圖生成
+### Spring Boot 默認靜態資源路徑
 
-自動生成不同尺寸的縮略圖以優化頁面加載。
+Spring Boot 自動映射以下路徑為靜態資源：
+- `/static/`
+- `/public/`
+- `/resources/`
+- `/META-INF/resources/`
 
-### 4. 定期清理
+### 當前配置
 
-定期清理未使用的圖片文件以節省存儲空間。
+由於我們使用了卷映射，實際的靜態資源訪問路徑為：
 
-## 相關文檔
+**URL路徑**: `/images/products/filename.jpg`  
+**物理路徑**: `/app/uploads/products/filename.jpg`
 
-- [圖片上傳功能說明](IMAGE_UPLOAD_STORAGE.md)
-- [本地資源配置](LOCAL_RESOURCES.md)
-- [Docker 日誌查看指南](VIEW_DOCKER_LOGS_GUIDE.md)
+這通過 Docker 卷映射實現，無需額外的資源處理器配置。
+
+## 重要注意事項
+
+### ⚠️ 已移除的配置
+
+以下配置已被**刪除**，因為它們與Spring Boot 的默認靜態資源處理衝突：
+
+```java
+//❌ 已刪除 - 不要使用
+@Configuration
+public class WebMvcConfig implements WebMvcConfigurer {
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/images/products/**")
+                .addResourceLocations("file:/app/uploads/products/");
+    }
+}
+```
+
+### ✅ 正確做法
+
+直接使用 Spring Boot 的默認靜態資源處理：
+- 將文件存儲在 `/app/uploads/products/`
+- 通過 Docker 卷映射到本地
+- 使用 `/images/products/**` 路徑訪問
+
+## 默認商品數據
+
+### 已完全移除
+
+系統不再創建任何默認/測試商品數據：
+
+1. ✅ `DataInitializer.java` - 已移除所有商品創建代碼
+2. ✅ `HomeController.java` - 已移除 `createSampleProducts()` 方法
+3. ✅ 數據庫 - 已清空所有舊的測試商品
+
+### 初始數據
+
+系統啟動時只會創建：
+- **5個分類**: 手機、電腦、穿戴裝置、耳機、配件
+- **3個用戶**:
+  - 管理員: admin / admin123
+  - 銷售員: sales / sales123
+  - 客戶: customer / customer123
+
+### 商品管理
+
+所有商品必須通過以下方式手動添加：
+-銷售員登入後台
+- 訪問 `/merchant/products`
+- 點擊「新增商品」
+- 上傳圖片並填寫商品信息
+
+## 故障排除
+
+### 問題1: 圖片無法顯示
+
+**可能原因**:
+1. 文件不存在於 `/app/uploads/products/`
+2. 文件權限問題
+3. 文件名在數據庫中記錄錯誤
+
+**檢查步驟**:
+```bash
+# 查看容器內文件
+docker exec online-shop-app ls -la /app/uploads/products/
+
+# 查看本地文件
+ls -la src/main/resources/static/images/products/
+
+# 檢查數據庫
+docker exec online-shop-mysql mysql -uroot -ppassword -e \
+  "USE online_shop_db; SELECT id, name, image_url FROM products;"
+```
+
+### 問題2: 上傳失敗
+
+**可能原因**:
+1. 目錄不存在
+2. 權限不足
+3. 文件大小超過限制
+
+**解決方法**:
+```bash
+# 確保目錄存在
+mkdir -p src/main/resources/static/images/products
+
+# 檢查容器日誌
+docker logs online-shop-app
+
+# 重啟容器
+docker compose restart
+```
+
+### 問題3: 舊圖片仍然顯示
+
+**原因**:瀏覽器緩存
+
+**解決方法**:
+1. 硬刷新頁面 (Ctrl+F5 或 Cmd+Shift+R)
+2. 清除瀏覽器緩存
+3. 使用隱私模式測試
+
+## 系統架構圖
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                      用戶瀏覽器                          │
+│                                                          │
+│  請求: GET /images/products/iphone-15-pro.jpg           │
+└────────────────────────┬────────────────────────────────┘
+                         │
+                         ↓
+┌─────────────────────────────────────────────────────────┐
+│                  Docker Container│
+│                  (online-shop-app)                       │
+│                                                          │
+│  ┌────────────────────────────────────────┐            │
+│  │  Spring Boot Application                │            │
+│  │                         │            │
+│  │  靜態資源處理                            │            │
+│  │  /images/products/** → static目錄      │            │
+│  └────────────────┬───────────────────────┘            │
+│                   │                                │
+│                   ↓                                      │
+│┌────────────────────────────────────────┐            │
+│  │  文件系統: /app/uploads/products/       │            │
+│  │  ├── iphone-15-pro.jpg                  │            │
+│  │  └── product-123.jpg                    │            │
+│  └────────────────┬───────────────────────┘            │
+│                   │                                      │
+│                   │ Docker Volume 映射                   │
+└───────────────────┼──────────────────────────────────────┘
+                    │
+                    ↓
+┌─────────────────────────────────────────────────────────┐
+│              本地文件系統                                 │
+│                                                          │
+│  /home/lei/project/onlineShopping/                │
+│    src/main/resources/static/images/products/           │
+│      ├── iphone-15-pro.jpg                              │
+│      └── product-123.jpg                                │
+└─────────────────────────────────────────────────────────┘
+```
+
+## 最佳實踐
+
+### 1. 文件命名
+
+使用時間戳前綴避免文件名衝突：
+```java
+String filename = System.currentTimeMillis() + "_" + originalFilename;
+// 結果: 1702560000000_iphone-15-pro.jpg
+```
+
+### 2. 文件驗證
+
+上傳前檢查文件類型和大小：
+```java
+if (!imageFile.getContentType().startsWith("image/")) {
+    throw new IllegalArgumentException("只允許上傳圖片文件");
+}
+```
+
+### 3. 錯誤處理
+
+提供友好的錯誤消息：
+```java
+try {
+    Files.write(filepath, imageFile.getBytes());
+} catch (IOException e) {
+    logger.error("圖片上傳失敗", e);
+    return "redirect:/merchant/products?error=upload";
+}
+```
+
+### 4. 圖片優化
+
+建議在上傳前或上傳後進行圖片優化：
+- 調整大小（建議 800x800 或 1200x1200）
+-壓縮質量（JPEG 質量 80-85%）
+- 使用適當格式（JPEG用於照片，PNG用於圖標）
 
 ## 總結
 
-通過配置 Docker volume 掛載，圖片數據現在：
-- ✅ 存儲在本地文件系統
-- ✅ 容器和主機之間自動同步
-- ✅ 重啟容器後數據不會丟失
-- ✅ 可以直接在本地查看和管理圖片文件
+### 核心要點
 
-**存儲路徑：** `src/main/resources/static/images/products/`
+1. ✅ **圖片存儲在本地文件系統**，不使用外部URL
+2. ✅ **數據庫只存儲文件名**，提高靈活性
+3. ✅ **Docker卷映射**實現本地與容器同步
+4. ✅ **Spring Boot靜態資源**自動處理圖片訪問
+5. ✅ **無默認商品數據**，所有商品需手動添加
+
+### 快速參考
+
+| 項目 | 值 |
+|------|-----|
+| 本地存儲路徑 | `src/main/resources/static/images/products/` |
+|容器存儲路徑 | `/app/uploads/products/` |
+| 訪問URL格式 | `/images/products/{filename}` |
+| 數據庫存儲 | 只存文件名，如 `iphone-15-pro.jpg` |
+| 上傳限制 | 10MB |
+| 支持格式 | JPG, JPEG, PNG, GIF, WebP |
+
+---
+
+**最後更新**: 2025-12-14
+**系統版本**: 1.0.0
