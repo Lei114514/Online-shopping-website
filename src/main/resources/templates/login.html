@@ -8,20 +8,23 @@
 <body>
     <div layout:fragment="content">
         <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-5">
+            <div class="col-md-6col-lg-5">
                 <div class="card shadow">
                     <div class="card-header bg-primary text-white text-center py-3">
-                        <h4 class="mb-0">
+                        <h4class="mb-0">
                             <i class="fas fa-sign-in-alt me-2"></i>用戶登錄
                         </h4>
                     </div>
                     <div class="card-body p-4">
-                        <!-- 錯誤消息 -->
+                        <!--錯誤消息 -->
                         <div th:if="${param.error}" class="alert alert-danger">
                             用戶名或密碼錯誤
                         </div>
                         <div th:if="${param.logout}" class="alert alert-success">
                             您已成功登出
+                        </div>
+                        <div th:if="${param.deactivated}" class="alert alert-warning">
+                            <i class="fas fa-check-circle me-2"></i>您的帳號已成功注銷。如需重新啟用，請聯繫管理員。
                         </div>
                         
                         <!-- 登錄表單 -->
@@ -30,10 +33,10 @@
                                 <label for="username" class="form-label">
                                     <i class="fas fa-user me-1"></i>用戶名
                                 </label>
-                                <input type="text" class="form-control" id="username" name="username" 
+                                <input type="text" class="form-control" id="username" name="username"
                                        required autofocus>
                             </div>
-                            
+                
                             <div class="mb-3">
                                 <label for="password" class="form-label">
                                     <i class="fas fa-lock me-1"></i>密碼
@@ -53,11 +56,11 @@
                                 </button>
                             </div>
                         </form>
-                        
                         <hr class="my-4">
-                <div class="text-center">
+                        <div class="text-center">
                             <p class="mb-2">還沒有帳號？</p>
-                            <a th:href="@{/register}" class="btn btn-outline-primary"><i class="fas fa-user-plus me-2"></i>立即註冊
+                            <a th:href="@{/register}" class="btn btn-outline-primary">
+                                <i class="fas fa-user-plus me-2"></i>立即註冊
                             </a>
                         </div>
                     </div>

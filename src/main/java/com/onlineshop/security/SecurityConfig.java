@@ -45,6 +45,9 @@ public class SecurityConfig {
                     "/favicon.ico", "/error"
                 ).permitAll()
                 
+                // 帳號注銷 - 所有已登錄用戶都可訪問
+                .requestMatchers("/users/deactivate").authenticated()
+                
                 // 顧客角色可訪問的URL
                 .requestMatchers(
                     "/cart/**", "/orders/**", "/profile/**"
@@ -55,7 +58,7 @@ public class SecurityConfig {
                     "/merchant/**"
                 ).hasAnyRole("SALES", "ADMIN")
                 
-                // 管理員角色可訪問的URL
+                // 管理員角色可訪問的URL（除了注銷端點）
                 .requestMatchers(
                     "/admin/**", "/users/**"
                 ).hasRole("ADMIN")
@@ -73,6 +76,9 @@ public class SecurityConfig {
             .logout(logout -> logout
                 .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
                 .logoutSuccessUrl("/login?logout=true")
+                .invalidateHttpSession(true)
+                .clearAuthentication(true)
+                .deleteCookies("JSESSIONID")
                 .permitAll()
             )
             .exceptionHandling(exception -> exception

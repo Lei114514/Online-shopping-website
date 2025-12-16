@@ -29,14 +29,18 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepository.findByUsername(username)
             .orElseThrow(() -> new UsernameNotFoundException("用戶名或密碼錯誤"));
         
-        // 檢查用戶是否啟用
+        //檢查用戶是否啟用
         if (!user.getEnabled()) {
-            throw new UsernameNotFoundException("用戶已被禁用");
+            throw new UsernameNotFoundException("該帳號已被注銷，無法登錄。如需重新啟用，請聯繫管理員。");
         }
         
         return new org.springframework.security.core.userdetails.User(
             user.getUsername(),
             user.getPassword(),
+            user.getEnabled(),  // 啟用狀態
+            true,   // 帳號未過期
+            true,   // 憑證未過期
+            true,   // 帳號未鎖定
             getAuthorities(user)
         );
     }

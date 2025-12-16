@@ -3,10 +3,16 @@ package com.onlineshop.controller;
 import com.onlineshop.model.User;
 import com.onlineshop.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * 用戶控制器
@@ -73,5 +79,49 @@ public class UserController {
     @GetMapping("/login")
     public String showLoginForm() {
         return "login";
+    }
+    
+    /**
+     * 處理帳號注銷請求
+     */
+    @PostMapping("/users/deactivate")
+    public String deactivateAccount(
+            @RequestParam String password,
+            HttpServletRequest request,
+            HttpServletResponse response,
+            RedirectAttributes redirectAttributes) {
+        try {
+            // 獲取當前登錄用戶
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || !auth.isAuthenticated()) {
+                return "redirect:/login?error=notLoggedIn";
+            }
+            
+            String username = auth.getName();
+            User user = userService.getUserByUsername(username);
+            
+            // 注銷帳號（軟刪除）
+            userService.deactivateAccount(user.getId(), password);
+            
+            // 完全清除會話並登出
+            SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
+            logoutHandler.setInvalidateHttpSession(true);
+            logoutHandler.setClearAuthentication(true);
+            logoutHandler.logout(request, response, auth);
+            
+            // 清除 SecurityContext
+            SecurityContextHolder.clearContext();
+            
+            // 注銷成功後直接重定向到登錄頁，不使用 flash attributes（因為會話已被清除）
+            return "redirect:/login?deactivated=true";
+            
+        } catch (IllegalArgumentException e) {
+            // 密碼錯誤或其他業務邏輯錯誤，保持登錄狀態
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "注銷失敗: " + e.getMessage());
+            return "redirect:/";
+        }
     }
 }

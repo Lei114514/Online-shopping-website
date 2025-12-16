@@ -154,4 +154,37 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
     }
+    
+    /**
+     * 注銷用戶帳號（軟刪除 - 禁用帳號）
+     * 注意：這不會刪除用戶數據，只是禁用帳號
+     */
+    public void deactivateAccount(Long userId, String password) {
+        User user = getUserById(userId);
+        
+        // 驗證密碼
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new IllegalArgumentException("密碼不正確，無法注銷帳號");
+        }
+        
+        // 禁用帳號
+        user.setEnabled(false);
+        userRepository.save(user);
+    }
+    
+    /**
+     * 永久刪除用戶帳號（硬刪除）
+     * 警告：這會永久刪除所有用戶數據
+     */
+    public void permanentlyDeleteAccount(Long userId, String password) {
+        User user = getUserById(userId);
+        
+        // 驗證密碼
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new IllegalArgumentException("密碼不正確，無法刪除帳號");
+        }
+        
+        // 永久刪除帳號
+        userRepository.deleteById(userId);
+    }
 }
