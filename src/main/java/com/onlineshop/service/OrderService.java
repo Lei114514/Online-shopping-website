@@ -234,6 +234,20 @@ public class OrderService {
     }
     
     /**
+     * 根據用戶ID獲取訂單
+     */
+    public List<Order> getOrdersByUserId(Long userId) {
+        return orderRepository.findByUserId(userId);
+    }
+    
+    /**
+     * 根據用戶ID和狀態獲取訂單
+     */
+    public List<Order> getOrdersByUserIdAndStatus(Long userId, Order.OrderStatus status) {
+        return orderRepository.findByUserIdAndStatus(userId, status);
+    }
+    
+    /**
      * 記錄用戶活動
      */
     private void logUserActivity(User user, String activityType, String details) {

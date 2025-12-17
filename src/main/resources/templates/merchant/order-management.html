@@ -31,27 +31,57 @@
         <!-- 篩選和操作欄 -->
         <div class="card mb-4">
             <div class="card-body">
-                <form th:action="@{/merchant/orders}" method="get" class="row g-3">
-                    <div class="col-md-4">
+                <form th:action="@{/merchant/orders}" method="get" class="row g-3 align-items-end">
+                    <div class="col-md-3">
                         <label class="form-label">訂單狀態</label>
                         <select name="status" class="form-select" onchange="this.form.submit()">
                             <option value="">全部狀態</option>
-                            <option th:each="status : ${orderStatuses}" 
-                                    th:value="${status}" 
+                            <option th:each="status : ${orderStatuses}"
+                                    th:value="${status}"
                                     th:text="${status.name()}"
                                     th:selected="${selectedStatus != null && selectedStatus == status.name()}">
                             </option>
                         </select>
                     </div>
-                    <div class="col-md-8d-flex align-items-end">
-                        <a th:href="@{/merchant/orders/statistics}" class="btn btn-info me-2">
+                    <div class="col-md-3">
+                        <label class="form-label">客戶篩選</label>
+                        <select name="customerId" class="form-select" onchange="this.form.submit()">
+                            <option value="">全部客戶</option>
+                            <option th:each="customer : ${customers}"
+                                    th:value="${customer.id}"
+                                    th:text="${customer.username + ' (' + customer.email + ')'}"
+                                    th:selected="${selectedCustomerId != null && selectedCustomerId == customer.id}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <a th:href="@{/merchant/orders}" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-times"></i> 清除篩選
+                        </a>
+                    </div>
+                    <div class="col-md-4 d-flex justify-content-end gap-2">
+                        <a th:href="@{/merchant/orders/statistics}" class="btn btn-info">
                             <i class="fas fa-chart-bar"></i> 銷售統計
                         </a>
                         <a th:href="@{/merchant/products}" class="btn btn-secondary">
                             <i class="fas fa-box"></i> 商品管理
-                        </a></div>
+                        </a>
+                    </div>
                 </form>
             </div>
+        </div>
+        
+        <!-- 篩選結果提示 -->
+        <div th:if="${selectedCustomerId != null}" class="alert alert-info mb-4">
+            <i class="fas fa-filter me-2"></i>
+            目前顯示客戶
+            <strong th:each="customer : ${customers}" th:if="${customer.id == selectedCustomerId}">
+                <span th:text="${customer.username}"></span>
+            </strong>
+            的購買記錄
+            <span th:if="${selectedStatus != null}">
+                ，狀態為 <strong th:text="${selectedStatus}"></strong>
+            </span>
         </div>
 
         <!-- 訂單列表 -->

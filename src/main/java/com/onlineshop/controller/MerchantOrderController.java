@@ -1,7 +1,9 @@
 package com.onlineshop.controller;
 
 import com.onlineshop.model.Order;
+import com.onlineshop.model.User;
 import com.onlineshop.service.OrderService;
+import com.onlineshop.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -9,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 商家訂單管理控制器
@@ -21,15 +24,35 @@ public class MerchantOrderController {
     @Autowired
     private OrderService orderService;
     
+    @Autowired
+    private UserService userService;
+    
     /**
      * 商家訂單管理列表
      */
     @GetMapping
     public String orderManagement(@RequestParam(required = false) String status,
+                                 @RequestParam(required = false) Long customerId,
                                  Model model) {
         List<Order> orders;
         
-        if (status != null && !status.trim().isEmpty()) {
+        // 根據篩選條件獲取訂單
+        if (customerId != null && status != null && !status.trim().isEmpty()) {
+            // 同時按客戶和狀態篩選
+            try {
+                Order.OrderStatus orderStatus = Order.OrderStatus.valueOf(status.toUpperCase());
+                orders = orderService.getOrdersByUserIdAndStatus(customerId, orderStatus);
+                model.addAttribute("selectedStatus", status);
+            } catch (IllegalArgumentException e) {
+                orders = orderService.getOrdersByUserId(customerId);
+            }
+            model.addAttribute("selectedCustomerId", customerId);
+        } else if (customerId != null) {
+            // 只按客戶篩選
+            orders = orderService.getOrdersByUserId(customerId);
+            model.addAttribute("selectedCustomerId", customerId);
+        } else if (status != null && !status.trim().isEmpty()) {
+            // 只按狀態篩選
             try {
                 Order.OrderStatus orderStatus = Order.OrderStatus.valueOf(status.toUpperCase());
                 orders = orderService.getOrdersByStatus(orderStatus);
@@ -38,11 +61,20 @@ public class MerchantOrderController {
                 orders = orderService.getAllOrders();
             }
         } else {
+            // 無篩選條件，獲取所有訂單
             orders = orderService.getAllOrders();
         }
         
+        // 獲取所有有訂單的客戶列表（用於下拉選單）
+        List<Order> allOrders = orderService.getAllOrders();
+        List<User> customersWithOrders = allOrders.stream()
+            .map(Order::getUser)
+            .distinct()
+            .collect(Collectors.toList());
+        
         model.addAttribute("orders", orders);
         model.addAttribute("orderStatuses", Order.OrderStatus.values());
+        model.addAttribute("customers", customersWithOrders);
         return "merchant/order-management";
     }
     
