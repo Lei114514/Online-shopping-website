@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>結賬 - 線上購物系統</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="row">
+            <div class="col-lg-8">
+                <h2 class="mb-4">
+                    <i class="fas fa-credit-card me-2"></i>結賬付款
+                </h2>
+                
+                <!-- 配送資訊 -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-truck me-2"></i>配送資訊</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="checkoutForm" th:action="@{/orders/place-order}" method="post">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">姓名</label>
+                                    <input type="text" class="form-control" 
+                                           th:value="${user.firstName + ' ' + user.lastName}" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">電子郵件</label>
+                                    <input type="email" class="form-control" 
+                                           th:value="${user.email}" readonly>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="shippingAddress" class="form-label">
+                                    <i class="fas fa-map-marker-alt me-1"></i>配送地址 <span class="text-danger">*</span>
+                                </label>
+                                <textarea id="shippingAddress" name="shippingAddress" 
+                                          class="form-control" rows="3" required
+                                          placeholder="請輸入完整的配送地址（包括郵遞區號、城市、街道等）"></textarea>
+                                <div class="form-text">請確保地址準確無誤,以便順利送達</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="phoneNumber" class="form-label">
+                                    <i class="fas fa-phone me-1"></i>聯絡電話 <span class="text-danger">*</span>
+                                </label>
+                                <input type="tel" id="phoneNumber" name="phoneNumber" 
+                                       class="form-control" required
+                                       placeholder="請輸入您的聯絡電話">
+                <div class="form-text">以便配送時聯繫</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">
+                                    <i class="fas fa-sticky-note me-1"></i>訂單備註
+                                </label>
+                                <textarea id="notes" name="notes" 
+                                          class="form-control" rows="2"
+                                          placeholder="如有特殊需求請在此說明（選填）"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- 支付方式 -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>支付方式</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check p-3 border rounded border-success bg-light">
+                            <input class="form-check-input" type="radio" name="paymentMethod"
+                                   id="cod" value="COD" checked form="checkoutForm">
+                            <label class="form-check-label w-100" for="cod">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-money-bill-wave me-2 text-success fa-lg"></i>
+                                        <strong class="fs-5">貨到付款</strong>
+                                    </div>
+                                    <span class="badge bg-success">唯一支付方式</span>
+                                </div>
+                                <div class="mt-2 text-muted small">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    商品送達時，請以現金支付給配送員
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <div class="alert alert-info mt-3 mb-0">
+                            <i class="fas fa-truck me-2"></i>
+                            <strong>配送說明：</strong>配送員將在送達時收取貨款，請準備好現金。
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 訂單摘要 -->
+            <div class="col-lg-4">
+                <div class="card sticky-top" style="top: 20px;">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-shopping-bag me-2"></i>訂單摘要</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- 購物車項目列表 -->
+                        <div class="mb-3" style="max-height: 300px; overflow-y: auto;">
+                            <div th:each="item : ${cartItems}" class="d-flex mb-3 pb-3 border-bottom">
+                                <img th:src="${item.product.imageUrl != null ? item.product.imageUrl : 'https://via.placeholder.com/60x60'}" 
+                                     class="img-thumbnail me-2" style="width: 60px; height: 60px; object-fit: cover;">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1 small" th:text="${item.product.name}">商品名稱</h6>
+                                    <small class="text-muted" th:text="'數量: ' + ${item.quantity}">數量: 1</small>
+                                    <div class="small fw-bold" th:text="'$' + ${item.totalPrice}">$0.00</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 價格明細 -->
+                        <div class="border-top pt-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>商品總計:</span>
+                                <span th:text="'$' + ${cartTotal}">$0.00</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>運費:</span>
+                                <span class="text-success">免運費</span>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between mb-3">
+                                <span class="h5">應付金額:</span>
+                                <span class="h4 text-primary fw-bold" th:text="'$' + ${cartTotal}">$0.00</span>
+                            </div>
+                        </div>
+                        
+                        <!-- 提交按鈕 -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" form="checkoutForm" class="btn btn-primary btn-lg">
+                                <i class="fas fa-lock me-2"></i>確認訂單並付款
+                            </button>
+                            <a th:href="@{/cart}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>返回購物車
+                            </a>
+                        </div>
+                
+                        <!-- 安全提示 -->
+                        <div class="alert alert-info mt-3 mb-0">
+                            <small>
+                                <i class="fas fa-shield-alt me-1"></i>
+                                您的付款資訊將經過加密保護
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <th:block layout:fragment="scripts">
+        <script>
+            // 表單驗證
+            (function() {
+                'use strict';
+                var form = document.getElementById('checkoutForm');
+                
+                form.addEventListener('submit', function(event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            })();
+        </script>
+    </th:block>
+</body>
+</html>

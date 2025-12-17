@@ -59,8 +59,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
            "AND o.paymentStatus = 'PAID' " +
            "GROUP BY DATE(o.createdAt) " +
            "ORDER BY DATE(o.createdAt) DESC")
-    List<Object[]> getSalesStatistics(@Param("startDate") LocalDateTime startDate, 
-                                     @Param("endDate") LocalDateTime endDate);
+    List<Object[]> getSalesStatistics(@Param("startDate") LocalDateTime startDate,@Param("endDate") LocalDateTime endDate);
     
     /**
      * Get top selling products
@@ -75,7 +74,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
            "ORDER BY totalSold DESC")
     List<Object[]> getTopSellingProducts(@Param("startDate") LocalDateTime startDate,
                                         @Param("endDate") LocalDateTime endDate);
-    
     /**
      * Find orders by payment status
      */
@@ -95,4 +93,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
      * Get recent orders
      */
     List<Order> findTop10ByOrderByCreatedAtDesc();
+    
+    /**
+     * Find order by confirmation token
+     */
+    Optional<Order> findByConfirmationToken(String confirmationToken);
 }

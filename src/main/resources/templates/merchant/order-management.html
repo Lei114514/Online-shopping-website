@@ -10,8 +10,7 @@
     <div class="container mt-4">
         <div class="row mb-4">
             <div class="col-md-12">
-                <h2><i class="fas fa-shopping-cart"></i> 訂單管理</h2>
-                <nav aria-label="breadcrumb">
+                <h2><i class="fas fa-shopping-cart"></i> 訂單管理</h2><nav aria-label="breadcrumb">
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item"><a th:href="@{/}">首頁</a></li>
                         <li class="breadcrumb-item active">訂單管理</li>
@@ -24,8 +23,7 @@
         <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="fas fa-check-circle"></i> <span th:text="${successMessage}"></span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        </div><div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
             <i class="fas fa-exclamation-circle"></i> <span th:text="${errorMessage}"></span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
@@ -45,14 +43,13 @@
                             </option>
                         </select>
                     </div>
-                    <div class="col-md-8 d-flex align-items-end">
+                    <div class="col-md-8d-flex align-items-end">
                         <a th:href="@{/merchant/orders/statistics}" class="btn btn-info me-2">
                             <i class="fas fa-chart-bar"></i> 銷售統計
                         </a>
                         <a th:href="@{/merchant/products}" class="btn btn-secondary">
                             <i class="fas fa-box"></i> 商品管理
-                        </a>
-                    </div>
+                        </a></div>
                 </form>
             </div>
         </div>
@@ -60,7 +57,7 @@
         <!-- 訂單列表 -->
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">訂單列表 (<span th:text="${#lists.size(orders)}">0</span> 筆)</h5>
+                <h5 class="mb-0">訂單列表 (<span th:text="${#lists.size(orders)}">0</span>筆)</h5>
             </div>
             <div class="card-body">
                 <div th:if="${#lists.isEmpty(orders)}" class="text-center py-5">
@@ -93,13 +90,11 @@
                                 <td th:text="${#temporals.format(order.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
                                 <td class="fw-bold" th:text="'$' + ${#numbers.formatDecimal(order.totalAmount, 1, 2)}"></td>
                                 <td>
-                                    <span class="badge" 
-                                          th:classappend="${order.status.name() == 'PENDING'} ? 'bg-warning' : 
-                                                         (${order.status.name() == 'PROCESSING'} ? 'bg-info' : 
+                                    <span class="badge"th:classappend="${order.status.name() == 'PENDING'} ? 'bg-warning' : 
+                                                (${order.status.name() == 'PROCESSING'} ? 'bg-info' : 
                                                          (${order.status.name() == 'SHIPPED'} ? 'bg-primary' : 
                                                          (${order.status.name() == 'DELIVERED'} ? 'bg-success' : 'bg-danger')))"
-                                          th:text="${order.status.name()}">
-                                    </span>
+                                          th:text="${order.status.name()}"></span>
                                 </td>
                                 <td>
                                     <span class="badge" 
@@ -122,10 +117,10 @@
                                                 title="更新狀態">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                    </div>
+                                </div>
 
                                     <!-- 更新狀態模態框 -->
-                                    <div class="modal fade" th:id="'updateStatusModal' + ${order.id}" tabindex="-1">
+                                    <div class="modal" th:id="'updateStatusModal' + ${order.id}" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
                                         <div class="modal-dialog">
                                             <div class="modal-content">
                                                 <div class="modal-header">
@@ -136,7 +131,7 @@
                                                     <div class="modal-body">
                                                         <p>訂單編號: <strong th:text="${order.orderNumber}"></strong></p>
                                                         <p>當前狀態: <strong th:text="${order.status.name()}"></strong></p>
-                                                        <div class="mb-3">
+                <div class="mb-3">
                                                             <label class="form-label">新狀態</label>
                                                             <select name="status" class="form-select" required>
                                                                 <option th:each="status : ${orderStatuses}" 

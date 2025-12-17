@@ -30,6 +30,9 @@ services:
       SPRING_DATASOURCE_USERNAME: onlineshop
       SPRING_DATASOURCE_PASSWORD: onlineshop123
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      # 郵件配置 - 請替換為您的 163 郵箱和授權碼
+      MAIL_USERNAME: ${MAIL_USERNAME:-your-email@163.com}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-your-authorization-code}
     ports:
       - "8080:8080"
     volumes:

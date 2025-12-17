@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>收貨確認成功</title>
+    <style>
+        .confirmation-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            text-align: center;
+        }
+        .success-icon {
+            font-size: 80px;
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+        .order-info {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 30px 0;
+        }
+        .order-info p {
+            margin: 10px 0;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin: 5px;
+        }
+        .status-delivered {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .status-paid {
+            background-color: #2196F3;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container">
+        <div class="confirmation-container">
+            <div class="success-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            
+            <h1>收貨確認成功！</h1>
+            <p class="lead" th:text="${successMessage}">感謝您確認收貨！</p>
+            
+            <div class="order-info" th:if="${order}">
+                <h3>訂單資訊</h3>
+                <p><strong>訂單編號:</strong> <span th:text="${order.orderNumber}"></span></p>
+                <p><strong>訂單日期:</strong> <span th:text="${#temporals.format(order.createdAt, 'yyyy-MM-dd HH:mm')}"></span></p>
+                <p><strong>確認時間:</strong> <span th:text="${#temporals.format(order.confirmedAt, 'yyyy-MM-dd HH:mm')}"></span></p>
+                <p><strong>訂單總額:</strong> <span th:text="'$' + ${#numbers.formatDecimal(order.totalAmount, 1, 2)}"></span></p>
+                
+                <div class="mt-3">
+                    <span class="status-badge status-delivered">已送達</span>
+                    <span class="status-badge status-paid">已付款</span>
+                </div>
+            </div>
+            
+            <div class="alert alert-info mt-4">
+                <i class="fas fa-info-circle"></i>
+                <strong>說明:</strong> 您的訂單已自動標記為已付款和已送達。感謝您的購買！
+            </div>
+            
+            <div class="mt-4">
+                <a th:href="@{/}" class="btn btn-primary btn-lg me-2"><i class="fas fa-home"></i> 返回首頁
+                </a>
+                <a th:href="@{/orders}" class="btn btn-outline-secondary btn-lg">
+                    <i class="fas fa-list"></i> 查看我的訂單
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

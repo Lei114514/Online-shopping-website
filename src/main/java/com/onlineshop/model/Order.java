@@ -63,13 +63,21 @@ public class Order {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
+    @Column(name = "confirmation_token", unique = true, length = 100)
+    private String confirmationToken;
+    
+    @Column(name = "confirmed_at")
+    private LocalDateTime confirmedAt;
+    
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-        // 生成訂單編號
+        updatedAt = LocalDateTime.now();// 生成訂單編號
         if (orderNumber == null) {
             orderNumber = "ORD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        }// 生成確認令牌
+        if (confirmationToken == null) {
+            confirmationToken = UUID.randomUUID().toString();
         }
     }
     
@@ -94,18 +102,32 @@ public class Order {
             .map(OrderItem::getSubtotal)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
+    /**
+     * 確認收貨
+     */
+    public void confirmDelivery() {
+        this.confirmedAt = LocalDateTime.now();
+        this.paymentStatus = PaymentStatus.PAID;
+        this.status = OrderStatus.DELIVERED;
+    }
     
     /**
-     * 訂單狀態枚舉
+     * 檢查是否已確認
+     */
+    public boolean isConfirmed() {
+        return confirmedAt != null;
+    }
+    
+    /**
+     *訂單狀態枚舉
      */
     public enum OrderStatus {
-        PENDING,     // 待處理
+        PENDING,// 待處理
         PROCESSING,  // 處理中
         SHIPPED,     // 已發貨
         DELIVERED,   // 已送達
-        CANCELLED    // 已取消
+        CANCELLED// 已取消
     }
-    
     /**
      * 支付狀態枚舉
      */

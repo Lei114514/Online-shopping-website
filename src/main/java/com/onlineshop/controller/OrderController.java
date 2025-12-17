@@ -1,7 +1,9 @@
 package com.onlineshop.controller;
 
+import com.onlineshop.model.CartItem;
 import com.onlineshop.model.Order;
 import com.onlineshop.model.User;
+import com.onlineshop.service.CartService;
 import com.onlineshop.service.OrderService;
 import com.onlineshop.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -27,6 +30,9 @@ public class OrderController {
     
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private CartService cartService;
     
     /**
      * 查看我的訂單
@@ -60,12 +66,29 @@ public class OrderController {
      * 結賬頁面
      */
     @GetMapping("/checkout")
-    public String checkout(Model model) {
+    public String checkout(Model model, RedirectAttributes redirectAttributes) {
         Long userId = getCurrentUserId();
         User user = userService.getUserById(userId);
         
+        // 獲取購物車項目
+        List<CartItem> cartItems = cartService.getCartItems(userId);
+        
+        // 檢查購物車是否為空
+        if (cartItems.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "購物車是空的，無法結賬");
+            return "redirect:/cart";
+        }
+        
+        // 計算總金額
+        BigDecimal cartTotal = cartItems.stream()
+            .map(CartItem::getTotalPrice)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
         model.addAttribute("user", user);
-        return "orders/checkout";
+        model.addAttribute("cartItems", cartItems);
+        model.addAttribute("cartTotal", cartTotal);
+        model.addAttribute("itemCount", cartItems.size());
+        return "checkout";
     }
     
     /**
@@ -73,19 +96,69 @@ public class OrderController {
      */
     @PostMapping("/place-order")
     public String placeOrder(@RequestParam String shippingAddress,
+                            @RequestParam String phoneNumber,
                             @RequestParam String paymentMethod,
                             @RequestParam(required = false) String notes,
                             RedirectAttributes redirectAttributes) {
         try {
             Long userId = getCurrentUserId();
-            Order order = orderService.createOrder(userId, shippingAddress, paymentMethod, notes);
+            
+            // 將電話號碼添加到配送地址中
+            String fullAddress = shippingAddress + "\n聯絡電話: " + phoneNumber;
+            
+            Order order = orderService.createOrder(userId, fullAddress, paymentMethod, notes);
             
             redirectAttributes.addFlashAttribute("successMessage", 
-                "訂單創建成功！訂單編號：" + order.getOrderNumber());
-            return "redirect:/orders/" + order.getId();
+                "訂單創建成功！訂單編號：" + order.getOrderNumber() + "。確認收貨郵件已發送至您的信箱。");
+            redirectAttributes.addFlashAttribute("orderNumber", order.getOrderNumber());
+            redirectAttributes.addFlashAttribute("orderId", order.getId());
+            
+            return "redirect:/orders/confirmation";
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-            return "redirect:/cart";
+            return "redirect:/orders/checkout";
+        }
+    }
+    
+    /**
+     * 訂單確認頁面
+     */
+    @GetMapping("/confirmation")
+    public String orderConfirmation(Model model, 
+                                   @ModelAttribute("orderNumber") String orderNumber,
+                                   @ModelAttribute("orderId") Long orderId) {
+        if (orderNumber == null || orderId == null) {
+            return "redirect:/orders";
+        }
+        
+        Order order = orderService.getOrderById(orderId);
+        
+        // 驗證訂單屬於當前用戶
+        Long userId = getCurrentUserId();
+        if (!order.getUser().getId().equals(userId)) {
+            return "redirect:/orders";
+        }
+        
+        model.addAttribute("order", order);
+        return "order-confirmation";
+    }
+    
+    /**
+     * 確認收貨（通過郵件連結）
+     */
+    @GetMapping("/confirm/{token}")
+    public String confirmDelivery(@PathVariable String token, 
+                                  Model model,
+                                  RedirectAttributes redirectAttributes) {
+        try {
+            Order order = orderService.confirmDelivery(token);
+            
+            model.addAttribute("order", order);
+            model.addAttribute("successMessage", "感謝您確認收貨！訂單已標記為已付款和已送達。");
+            return "order-delivery-confirmed";
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/";
         }
     }
     

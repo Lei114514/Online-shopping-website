@@ -45,6 +45,9 @@ public class SecurityConfig {
                     "/favicon.ico", "/error"
                 ).permitAll()
                 
+                // 郵件確認收貨連結 - 公開訪問
+                .requestMatchers("/orders/confirm/**").permitAll()
+                
                 // 帳號注銷 - 所有已登錄用戶都可訪問
                 .requestMatchers("/users/deactivate").authenticated()
                 

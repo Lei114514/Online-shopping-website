@@ -3,15 +3,11 @@ package com.onlineshop.service;
 import com.onlineshop.model.*;
 import com.onlineshop.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * 訂單服務類
@@ -36,7 +32,7 @@ public class OrderService {
     private UserActivityLogRepository userActivityLogRepository;
     
     @Autowired
-    private JavaMailSender mailSender;
+    private EmailService emailService;
     
     /**
      * 創建訂單
@@ -90,10 +86,36 @@ public class OrderService {
         logUserActivity(user, UserActivityLog.ActivityType.PLACE_ORDER, 
                        "下單訂單編號: " + savedOrder.getOrderNumber());
         
-        // 發送訂單確認郵件
-        sendOrderConfirmationEmail(user, savedOrder);
+        // 發送訂單確認郵件（帶確認收貨連結）
+        try {
+            emailService.sendOrderConfirmationEmail(user, savedOrder);
+        } catch (Exception e) {
+            System.err.println("發送確認郵件失敗: " + e.getMessage());
+        }
         
         return savedOrder;
+    }
+    
+    /**
+     * 確認收貨（通過郵件連結）
+     */
+    public Order confirmDelivery(String confirmationToken) {
+        Order order = orderRepository.findByConfirmationToken(confirmationToken)
+            .orElseThrow(() -> new IllegalArgumentException("無效的確認令牌"));
+        
+        // 檢查是否已確認
+        if (order.isConfirmed()) {
+            throw new IllegalArgumentException("訂單已確認");
+        }
+        
+        // 確認收貨
+        order.confirmDelivery();
+        
+        // 記錄用戶活動
+        logUserActivity(order.getUser(), UserActivityLog.ActivityType.PLACE_ORDER, 
+                       "確認收貨: " + order.getOrderNumber());
+        
+        return orderRepository.save(order);
     }
     
     /**
@@ -196,6 +218,7 @@ public class OrderService {
     public List<Object[]> getTopSellingProducts(LocalDateTime startDate, LocalDateTime endDate) {
         return orderRepository.getTopSellingProducts(startDate, endDate);
     }
+    
     /**
      * 獲取所有訂單
      */
@@ -208,43 +231,6 @@ public class OrderService {
      */
     public List<Order> getOrdersByStatus(Order.OrderStatus status) {
         return orderRepository.findByStatus(status);
-    }
-    
-    
-    /**
-     * 發送訂單確認郵件
-     */
-    private void sendOrderConfirmationEmail(User user, Order order) {
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(user.getEmail());
-            message.setSubject("訂單確認 - " + order.getOrderNumber());
-            
-            StringBuilder emailContent = new StringBuilder();
-            emailContent.append("親愛的 ").append(user.getFirstName()).append(" ").append(user.getLastName()).append(",\n\n");
-            emailContent.append("感謝您的訂購！以下是您的訂單詳情：\n\n");
-            emailContent.append("訂單編號: ").append(order.getOrderNumber()).append("\n");
-            emailContent.append("訂單日期: ").append(order.getCreatedAt()).append("\n");
-            emailContent.append("總金額: $").append(order.getTotalAmount()).append("\n\n");
-            emailContent.append("訂單項目:\n");
-            
-            for (OrderItem item : order.getOrderItems()) {
-                emailContent.append("- ").append(item.getProductName())
-                           .append(" x").append(item.getQuantity())
-                           .append(": $").append(item.getSubtotal()).append("\n");
-            }
-            
-            emailContent.append("\n配送地址: ").append(order.getShippingAddress()).append("\n");
-            emailContent.append("訂單狀態: ").append(order.getStatus()).append("\n\n");
-            emailContent.append("如有任何問題，請聯繫客服。\n");
-            emailContent.append("感謝您的惠顧！\n");
-            
-            message.setText(emailContent.toString());
-            mailSender.send(message);
-        } catch (Exception e) {
-            // 記錄錯誤但不影響訂單創建
-            System.err.println("發送郵件失敗: " + e.getMessage());
-        }
     }
     
     /**
