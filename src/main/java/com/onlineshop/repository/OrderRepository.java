@@ -59,7 +59,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
            "AND o.paymentStatus = 'PAID' " +
            "GROUP BY DATE(o.createdAt) " +
            "ORDER BY DATE(o.createdAt) DESC")
-    List<Object[]> getSalesStatistics(@Param("startDate") LocalDateTime startDate,@Param("endDate") LocalDateTime endDate);
+    List<Object[]> getSalesStatistics(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
     
     /**
      * Get top selling products
@@ -72,8 +72,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
            "AND o.paymentStatus = 'PAID' " +
            "GROUP BY p.id, p.name " +
            "ORDER BY totalSold DESC")
-    List<Object[]> getTopSellingProducts(@Param("startDate") LocalDateTime startDate,
-                                        @Param("endDate") LocalDateTime endDate);
+    List<Object[]> getTopSellingProducts(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+    
     /**
      * Find orders by payment status
      */

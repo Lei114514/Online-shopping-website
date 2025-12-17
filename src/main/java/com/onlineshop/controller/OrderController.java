@@ -168,7 +168,8 @@ public class OrderController {
     @PostMapping("/{id}/cancel")
     public String cancelOrder(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
-            Order order = orderService.cancelOrder(id);
+            // 先獲取訂單檢查權限
+            Order order = orderService.getOrderById(id);
             
             // 檢查訂單是否屬於當前用戶
             Long userId = getCurrentUserId();
@@ -176,12 +177,15 @@ public class OrderController {
                 return "redirect:/access-denied";
             }
             
-            redirectAttributes.addFlashAttribute("successMessage", "訂單已取消！");
+            // 權限驗證通過後才取消訂單
+            orderService.cancelOrder(id);
+            
+            redirectAttributes.addFlashAttribute("successMessage", "訂單已成功取消，庫存已恢復！");
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
         
-        return "redirect:/orders/" + id;
+        return "redirect:/orders";
     }
     
     /**

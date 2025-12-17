@@ -43,9 +43,7 @@ public interface UserActivityLogRepository extends JpaRepository<UserActivityLog
            "WHERE l.user = :user AND l.createdAt BETWEEN :startDate AND :endDate " +
            "GROUP BY l.activityType " +
            "ORDER BY activityCount DESC")
-    List<Object[]> getUserActivityStatistics(@Param("user") User user,
-                                            @Param("startDate") LocalDateTime startDate,
-                                            @Param("endDate") LocalDateTime endDate);
+    List<Object[]> getUserActivityStatistics(@Param("user") User user, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
     
     /**
      * Get product view statistics
@@ -56,8 +54,7 @@ public interface UserActivityLogRepository extends JpaRepository<UserActivityLog
            "WHERE l.activityType = 'VIEW_PRODUCT' AND l.createdAt BETWEEN :startDate AND :endDate " +
            "GROUP BY productId " +
            "ORDER BY viewCount DESC")
-    List<Object[]> getProductViewStatistics(@Param("startDate") LocalDateTime startDate,
-                                           @Param("endDate") LocalDateTime endDate);
+    List<Object[]> getProductViewStatistics(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
     
     /**
      * Get recent activity logs
@@ -87,6 +84,5 @@ public interface UserActivityLogRepository extends JpaRepository<UserActivityLog
            "WHERE l.createdAt BETWEEN :startDate AND :endDate " +
            "GROUP BY l.activityType " +
            "ORDER BY activityCount DESC")
-    List<Object[]> getActivityTypeStatistics(@Param("startDate") LocalDateTime startDate,
-                                            @Param("endDate") LocalDateTime endDate);
+    List<Object[]> getActivityTypeStatistics(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 }

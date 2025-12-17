@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>訂單詳情 - 線上購物系統</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container py-4">
+            <!-- 麵包屑導航 -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a th:href="@{/}">首頁</a></li>
+                    <li class="breadcrumb-item"><a th:href="@{/orders}">我的訂單</a></li>
+                    <li class="breadcrumb-item active" th:text="'訂單 ' + ${order.orderNumber}">訂單詳情</li>
+                </ol>
+            </nav>
+            
+            <!-- 成功/錯誤訊息 -->
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                <span th:text="${successMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <span th:text="${errorMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            
+            <div class="row">
+                <!-- 左側：訂單信息 -->
+                <div class="col-lg-8">
+                    <!-- 訂單狀態卡片 -->
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-info-circle me-2"></i>訂單狀態
+                            </h5>
+                            <span th:switch="${order.status.name()}">
+                                <span th:case="'PENDING'" class="badge bg-warning text-dark fs-6">
+                                    <i class="fas fa-hourglass-half me-1"></i>待處理
+                                </span>
+                                <span th:case="'PROCESSING'" class="badge bg-info fs-6">
+                                    <i class="fas fa-cog me-1"></i>處理中
+                                </span>
+                                <span th:case="'SHIPPED'" class="badge bg-primary fs-6">
+                                    <i class="fas fa-truck me-1"></i>已發貨
+                                </span>
+                                <span th:case="'DELIVERED'" class="badge bg-success fs-6">
+                                    <i class="fas fa-check-circle me-1"></i>已送達
+                                </span>
+                                <span th:case="'CANCELLED'" class="badge bg-danger fs-6">
+                                    <i class="fas fa-times-circle me-1"></i>已取消
+                                </span>
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <!-- 訂單進度條 -->
+                            <div class="order-progress mb-4" th:if="${order.status.name() != 'CANCELLED'}">
+                                <div class="d-flex justify-content-between position-relative">
+                                    <div class="progress position-absolute w-100" style="height: 4px; top: 15px; z-index: 0;">
+                                        <div class="progress-bar" role="progressbar" 
+                                             th:style="'width: ' + ${order.status.name() == 'PENDING' ? '0%' : (order.status.name() == 'PROCESSING' ? '33%' : (order.status.name() == 'SHIPPED' ? '66%' : '100%'))}">
+                                        </div>
+                                    </div>
+                                    <div class="text-center" style="z-index: 1;">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2"
+                                             th:classappend="${order.status.name() == 'PENDING' or order.status.name() == 'PROCESSING' or order.status.name() == 'SHIPPED' or order.status.name() == 'DELIVERED' ? 'bg-primary text-white' : 'bg-light text-muted'}"
+                                             style="width: 35px; height: 35px;">
+                                            <i class="fas fa-clipboard-list"></i>
+                                        </div>
+                                        <small>待處理</small>
+                                    </div>
+                                    <div class="text-center" style="z-index: 1;">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2"
+                                             th:classappend="${order.status.name() == 'PROCESSING' or order.status.name() == 'SHIPPED' or order.status.name() == 'DELIVERED' ? 'bg-primary text-white' : 'bg-light text-muted'}"
+                                             style="width: 35px; height: 35px;">
+                                            <i class="fas fa-cog"></i>
+                                        </div>
+                                        <small>處理中</small>
+                                    </div>
+                                    <div class="text-center" style="z-index: 1;">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2"
+                                             th:classappend="${order.status.name() == 'SHIPPED' or order.status.name() == 'DELIVERED' ? 'bg-primary text-white' : 'bg-light text-muted'}"
+                                             style="width: 35px; height: 35px;">
+                                            <i class="fas fa-truck"></i>
+                                        </div>
+                                        <small>已發貨</small>
+                                    </div>
+                                    <div class="text-center" style="z-index: 1;">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2"
+                                             th:classappend="${order.status.name() == 'DELIVERED' ? 'bg-success text-white' : 'bg-light text-muted'}"
+                                             style="width: 35px; height: 35px;">
+                                            <i class="fas fa-check"></i>
+                                        </div>
+                                        <small>已送達</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 已取消訂單提示 -->
+                            <div th:if="${order.status.name() == 'CANCELLED'}" class="alert alert-danger mb-0">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                此訂單已被取消
+                            </div>
+                            
+                            <!-- 確認收貨提示 -->
+                            <div th:if="${order.status.name() == 'SHIPPED' and !order.confirmed}" class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                您的訂單已發貨，收到商品後請點擊下方按鈕確認收貨。
+                                <div class="mt-2">
+                                    <a th:href="@{'/orders/confirm/' + ${order.confirmationToken}}" class="btn btn-success">
+                                        <i class="fas fa-check me-1"></i>確認收貨
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <!-- 已確認收貨提示 -->
+                            <div th:if="${order.confirmed}" class="alert alert-success mb-0">
+                                <i class="fas fa-check-circle me-2"></i>
+                                您已於 <span th:text="${#temporals.format(order.confirmedAt, 'yyyy-MM-dd HH:mm')}"></span> 確認收貨
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 訂單商品列表 -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-shopping-cart me-2"></i>訂單商品
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 80px;">圖片</th>
+                                            <th>商品名稱</th>
+                                            <th class="text-center">單價</th>
+                                            <th class="text-center">數量</th>
+                                            <th class="text-end">小計</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="item : ${order.orderItems}">
+                                            <td>
+                                                <img th:src="${item.product.imageUrl != null ? '/images/products/' + item.product.imageUrl : 'https://via.placeholder.com/60x60'}" 
+                                                     class="img-thumbnail" 
+                                                     style="width: 60px; height: 60px; object-fit: cover;">
+                                            </td>
+                                            <td class="align-middle">
+                                                <a th:href="@{'/products/' + ${item.product.id}}" 
+                                                   th:text="${item.productName}"
+                                                   class="text-decoration-none">商品名稱</a>
+                                            </td>
+                                            <td class="align-middle text-center" th:text="'$' + ${item.productPrice}">$0.00</td>
+                                            <td class="align-middle text-center" th:text="${item.quantity}">1</td>
+                                            <td class="align-middle text-end fw-bold" th:text="'$' + ${item.subtotal}">$0.00</td>
+                                        </tr>
+                                    </tbody>
+                                    <tfoot class="table-light">
+                                        <tr>
+                                            <td colspan="4" class="text-end fw-bold">訂單總計：</td>
+                                            <td class="text-end">
+                                                <span class="h5 text-primary fw-bold mb-0" th:text="'$' + ${order.totalAmount}">$0.00</span>
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 右側：訂單摘要 -->
+                <div class="col-lg-4">
+                    <!-- 訂單信息 -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-file-alt me-2"></i>訂單信息
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <dl class="row mb-0">
+                                <dt class="col-5 text-muted">訂單編號</dt>
+                                <dd class="col-7 text-end fw-bold text-primary" th:text="${order.orderNumber}">ORD-XXXXXXXX</dd>
+                                
+                                <dt class="col-5 text-muted">下單時間</dt>
+                                <dd class="col-7 text-end" th:text="${#temporals.format(order.createdAt, 'yyyy-MM-dd HH:mm')}">2024-01-01 12:00</dd>
+                                
+                                <dt class="col-5 text-muted">更新時間</dt>
+                                <dd class="col-7 text-end" th:text="${#temporals.format(order.updatedAt, 'yyyy-MM-dd HH:mm')}">2024-01-01 12:00</dd>
+                                
+                                <dt class="col-5 text-muted">付款方式</dt>
+                                <dd class="col-7 text-end">
+                                    <span th:switch="${order.paymentMethod}">
+                                        <span th:case="'COD'">貨到付款</span>
+                                        <span th:case="'CREDIT_CARD'">信用卡</span>
+                                        <span th:case="'PAYPAL'">PayPal</span>
+                                        <span th:case="'BANK_TRANSFER'">銀行轉帳</span>
+                                        <span th:case="*" th:text="${order.paymentMethod}">其他</span>
+                                    </span>
+                                </dd>
+                                
+                                <dt class="col-5 text-muted">付款狀態</dt>
+                                <dd class="col-7 text-end">
+                                    <span th:switch="${order.paymentStatus.name()}">
+                                        <span th:case="'PENDING'" class="badge bg-warning text-dark">待付款</span>
+                                        <span th:case="'PAID'" class="badge bg-success">已付款</span>
+                                        <span th:case="'FAILED'" class="badge bg-danger">付款失敗</span>
+                                    </span>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                    
+                    <!-- 配送信息 -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-shipping-fast me-2"></i>配送信息
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="text-muted mb-2">配送地址</h6>
+                            <p class="mb-3" th:text="${order.shippingAddress}">配送地址</p>
+                            
+                            <div th:if="${order.billingAddress != null and order.billingAddress != ''}">
+                                <h6 class="text-muted mb-2">帳單地址</h6>
+                                <p class="mb-0" th:text="${order.billingAddress}">帳單地址</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 備註 -->
+                    <div class="card mb-4" th:if="${order.notes != null and order.notes != ''}">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-sticky-note me-2"></i>訂單備註
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-0" th:text="${order.notes}">備註內容</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 操作按鈕 -->
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <a th:href="@{/orders}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>返回訂單列表
+                                </a>
+                                
+                                <!-- 確認收貨按鈕 -->
+                                <a th:if="${order.status.name() == 'SHIPPED' and !order.confirmed}" 
+                                   th:href="@{'/orders/confirm/' + ${order.confirmationToken}}" 
+                                   class="btn btn-success">
+                                    <i class="fas fa-check me-2"></i>確認收貨
+                                </a>
+                                
+                                <!-- 取消訂單按鈕 -->
+                                <form th:if="${order.status.name() == 'PENDING' or order.status.name() == 'PROCESSING'}"
+                                      th:action="@{'/orders/' + ${order.id} + '/cancel'}" 
+                                      method="post"
+                                      onsubmit="return confirm('確定要取消此訂單嗎？取消後庫存將會恢復。');">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                    <button type="submit" class="btn btn-outline-danger w-100">
+                                        <i class="fas fa-times me-2"></i>取消訂單
+                                    </button>
+                                </form>
+                                
+                                <!-- 再次購買按鈕 -->
+                                <a th:href="@{/products}" class="btn btn-primary">
+                                    <i class="fas fa-shopping-cart me-2"></i>繼續購物
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
