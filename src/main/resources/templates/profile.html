@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>個人資料 - 線上購物系統</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container mt-4">
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <h2><i class="fas fa-user-circle me-2"></i>個人資料</h2>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a th:href="@{/}">首頁</a></li>
+                        <li class="breadcrumb-item active">個人資料</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+
+        <!-- 成功/錯誤消息 -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i><span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i><span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div class="row">
+            <!-- 用戶資料卡片 -->
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-user-circle fa-5x text-primary"></i>
+                        </div>
+                        <h4 th:text="${user.fullName}">用戶名稱</h4>
+                        <p class="text-muted mb-1">@<span th:text="${user.username}">username</span></p>
+                        <span class="badge" 
+                              th:classappend="${user.role.name() == 'ADMIN'} ? 'bg-danger' : 
+                                             (${user.role.name() == 'SALES'} ? 'bg-success' : 'bg-primary')"
+                              th:text="${user.role.name() == 'ADMIN'} ? '管理員' : 
+                                       (${user.role.name() == 'SALES'} ? '商家' : '顧客')">
+                            角色
+                        </span>
+                        <hr>
+                        <div class="text-start">
+                            <p class="mb-2">
+                                <i class="fas fa-envelope me-2 text-muted"></i>
+                                <span th:text="${user.email}">email@example.com</span>
+                            </p>
+                            <p class="mb-2" th:if="${user.phone}">
+                                <i class="fas fa-phone me-2 text-muted"></i>
+                                <span th:text="${user.phone}">電話</span>
+                            </p>
+                            <p class="mb-2" th:if="${user.address}">
+                                <i class="fas fa-map-marker-alt me-2 text-muted"></i>
+                                <span th:text="${user.address}">地址</span>
+                            </p>
+                            <p class="mb-0 text-muted small">
+                                <i class="fas fa-calendar me-2"></i>
+                                註冊時間: <span th:text="${#temporals.format(user.createdAt, 'yyyy-MM-dd')}">2024-01-01</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 編輯資料表單 -->
+            <div class="col-md-8">
+                <!-- 基本資料 -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-edit me-2"></i>編輯基本資料</h5>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/users/profile/update}" method="post">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">名字 <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="firstName" 
+                                           th:value="${user.firstName}" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">姓氏 <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="lastName" 
+                                           th:value="${user.lastName}" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">電子郵件 <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" name="email" 
+                                       th:value="${user.email}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">電話</label>
+                                <input type="tel" class="form-control" name="phone" 
+                                       th:value="${user.phone}" placeholder="請輸入電話號碼">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">地址</label>
+                                <textarea class="form-control" name="address" rows="3" 
+                                          placeholder="請輸入地址" th:text="${user.address}"></textarea>
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>保存更改
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- 修改密碼 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-lock me-2"></i>修改密碼</h5>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/users/profile/change-password}" method="post">
+                            <div class="mb-3">
+                                <label class="form-label">當前密碼 <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" name="currentPassword" 
+                                       required placeholder="請輸入當前密碼">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">新密碼 <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" name="newPassword" 
+                                       required minlength="6" placeholder="請輸入新密碼（至少6個字符）">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">確認新密碼 <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" name="confirmPassword" 
+                                       required minlength="6" placeholder="請再次輸入新密碼">
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="fas fa-key me-2"></i>修改密碼
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

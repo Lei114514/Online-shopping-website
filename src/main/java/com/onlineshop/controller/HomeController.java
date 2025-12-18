@@ -103,22 +103,6 @@ public class HomeController {
     }
     
     /**
-     * 關於我們頁
-     */
-    @GetMapping("/about")
-    public String about() {
-        return "about";
-    }
-    
-    /**
-     * 聯繫我們頁
-     */
-    @GetMapping("/contact")
-    public String contact() {
-        return "contact";
-    }
-    
-    /**
      *訪問被拒絕頁
      */
     @GetMapping("/access-denied")

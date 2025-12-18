@@ -134,52 +134,7 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <a th:href="@{/merchant/orders/{id}(id=${order.id})}" 
-                                           class="btn btn-outline-primary"
-                                           title="查看詳情">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <button type="button" 
-                                                class="btn btn-outline-success"
-                                                data-bs-toggle="modal" 
-                                                th:data-bs-target="'#updateStatusModal' + ${order.id}"
-                                                title="更新狀態">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                </div>
-
-                                    <!-- 更新狀態模態框 -->
-                                    <div class="modal" th:id="'updateStatusModal' + ${order.id}" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">更新訂單狀態</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <form th:action="@{/merchant/orders/{id}/update-status(id=${order.id})}" method="post">
-                                                    <div class="modal-body">
-                                                        <p>訂單編號: <strong th:text="${order.orderNumber}"></strong></p>
-                                                        <p>當前狀態: <strong th:text="${order.status.name()}"></strong></p>
-                <div class="mb-3">
-                                                            <label class="form-label">新狀態</label>
-                                                            <select name="status" class="form-select" required>
-                                                                <option th:each="status : ${orderStatuses}" 
-                                                                        th:value="${status}" 
-                                                                        th:text="${status.name()}"
-                                                                        th:selected="${status == order.status}">
-                                                                </option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                                                        <button type="submit" class="btn btn-primary">確認更新</button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <span class="text-muted">-</span>
                                 </td>
                             </tr>
                         </tbody>

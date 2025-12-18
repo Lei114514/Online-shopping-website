@@ -42,16 +42,6 @@
                             <i class="fas fa-store"></i> 商品
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/about}">
-                            <i class="fas fa-info-circle"></i> 關於我們
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/contact}">
-                            <i class="fas fa-envelope"></i> 聯繫我們
-                        </a>
-                    </li>
                     <!-- 商家導航 -->
                     <li class="nav-item" sec:authorize="hasRole('SALES')">
                         <a class="nav-link" th:href="@{/merchant/products}">
@@ -157,21 +147,15 @@
     <footer class="bg-dark text-white py-4 mt-5">
         <div class="container">
             <div class="row">
-                <div class="col-md-4">
-                    <h5>關於我們</h5>
-                    <p>提供優質商品和服務的線上購物平台。</p>
-                </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <h5>快速鏈接</h5>
                     <ul class="list-unstyled">
                         <li><a th:href="@{/}" class="text-white">首頁</a></li>
                         <li><a th:href="@{/products}" class="text-white">商品</a></li>
-                        <li><a th:href="@{/about}" class="text-white">關於我們</a></li>
-                        <li><a th:href="@{/contact}" class="text-white">聯繫我們</a></li>
                     </ul>
                 </div>
-                <div class="col-md-4">
-                    <h5>聯繫我們</h5>
+                <div class="col-md-6">
+                    <h5>客服支援</h5>
                     <p><i class="fas fa-envelope"></i> support@onlineshop.com</p>
                     <p><i class="fas fa-phone"></i> +8862 1234 5678</p>
                 </div>

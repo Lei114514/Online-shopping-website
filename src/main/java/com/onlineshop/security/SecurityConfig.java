@@ -53,17 +53,20 @@ public class SecurityConfig {
                 
                 // 顧客角色可訪問的URL
                 .requestMatchers(
-                    "/cart/**", "/orders/**", "/profile/**"
+                    "/cart/**", "/orders/**"
                 ).hasAnyRole("CUSTOMER", "SALES")
+                
+                // 個人資料 - 所有已登錄用戶都可訪問
+                .requestMatchers("/users/profile/**").authenticated()
                 
                 // 商家/銷售角色可訪問的URL
                 .requestMatchers(
                     "/merchant/**"
                 ).hasAnyRole("SALES", "ADMIN")
                 
-                // 管理員角色可訪問的URL（除了注銷端點）
+                // 管理員角色可訪問的URL（除了注銷端點和個人資料）
                 .requestMatchers(
-                    "/admin/**", "/users/**"
+                    "/admin/**"
                 ).hasRole("ADMIN")
                 
                 // 其他請求需要認證

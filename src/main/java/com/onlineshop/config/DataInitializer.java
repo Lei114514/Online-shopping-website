@@ -1,27 +1,20 @@
 package com.onlineshop.config;
 
 import com.onlineshop.model.Category;
-import com.onlineshop.model.Product;
 import com.onlineshop.model.User;
 import com.onlineshop.repository.CategoryRepository;
-import com.onlineshop.repository.ProductRepository;
 import com.onlineshop.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
-
 /**
- * 數據初始化器
- * 在應用啟動時自動填充測試數據
+ * Data Initializer
+ * Creates default users on application startup
  */
 @Component
 public class DataInitializer implements CommandLineRunner {
-
-    @Autowired
-    private ProductRepository productRepository;
 
     @Autowired
     private CategoryRepository categoryRepository;
@@ -34,41 +27,41 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        System.out.println("開始初始化數據庫...");
+        System.out.println("Starting database initialization...");
 
-        // 創建分類（僅在沒有分類時創建）
+        // Create default categories (only if none exist)
         if (categoryRepository.count() == 0) {
             Category electronics = new Category();
-            electronics.setName("\u96FB\u5B50\u7522\u54C1");
-            electronics.setDescription("\u667A\u80FD\u624B\u6A5F\u3001\u96FB\u8166\u53CA\u5176\u4ED6\u96FB\u5B50\u8A2D\u5099");
+            electronics.setName("Electronics");
+            electronics.setDescription("Smartphones, computers and other electronic devices");
             categoryRepository.save(electronics);
 
             Category accessories = new Category();
-            accessories.setName("\u914D\u4EF6");
-            accessories.setDescription("\u96FB\u5B50\u7522\u54C1\u914D\u4EF6");
+            accessories.setName("Accessories");
+            accessories.setDescription("Electronic accessories");
             categoryRepository.save(accessories);
             
             Category clothing = new Category();
-            clothing.setName("\u670D\u88DD");
-            clothing.setDescription("\u6642\u5C1A\u670D\u98FE");
+            clothing.setName("Clothing");
+            clothing.setDescription("Fashion and apparel");
             categoryRepository.save(clothing);
             
             Category books = new Category();
-            books.setName("\u66F8\u7C4D");
-            books.setDescription("\u66F8\u7C4D\u548C\u51FA\u7248\u7269");
+            books.setName("Books");
+            books.setDescription("Books and publications");
             categoryRepository.save(books);
             
             Category home = new Category();
-            home.setName("\u5BB6\u5C45\u7528\u54C1");
-            home.setDescription("\u5BB6\u96FB\u548C\u751F\u6D3B\u7528\u54C1");
+            home.setName("Home");
+            home.setDescription("Home appliances and daily necessities");
             categoryRepository.save(home);
 
-            System.out.println("已創建 " + categoryRepository.count() + " 個商品分類");
+            System.out.println("Created " + categoryRepository.count() + " product categories");
         } else {
-            System.out.println("分類已存在，跳過分類初始化");
+            System.out.println("Categories already exist, skipping category initialization");
         }
 
-        // 創建測試用戶（僅在沒有用戶時創建）
+        // Create default users (only if none exist)
         if (userRepository.count() == 0) {
             User admin = new User();
             admin.setUsername("admin");
@@ -97,16 +90,15 @@ public class DataInitializer implements CommandLineRunner {
             customer.setRole(User.UserRole.CUSTOMER);
             userRepository.save(customer);
 
-            System.out.println("已創建測試用戶:");
-            System.out.println("管理員 - username: admin, password: admin123");
-            System.out.println("銷售人員 - username: sales, password: sales123");
-            System.out.println("顧客 - username: customer, password: customer123");
+            System.out.println("Created test users:");
+            System.out.println("Admin - username: admin, password: admin123");
+            System.out.println("Sales - username: sales, password: sales123");
+            System.out.println("Customer - username: customer, password: customer123");
         } else {
-            System.out.println("用戶已存在，跳過用戶初始化");
+            System.out.println("Users already exist, skipping user initialization");
         }
 
-        System.out.println("數據初始化完成！");
-        System.out.println("當前商品數量: " + productRepository.count());
-        System.out.println("所有商品需要由商家用戶自行添加");
+        System.out.println("Database initialization complete!");
+        System.out.println("All products must be added by merchant users.");
     }
 }

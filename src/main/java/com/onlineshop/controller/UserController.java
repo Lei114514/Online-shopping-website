@@ -5,6 +5,7 @@ import com.onlineshop.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,13 +17,16 @@ import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * 用戶控制器
- * 處理用戶註冊、登錄等操作
+ * 處理用戶註冊、登錄、個人資料等操作
  */
 @Controller
 public class UserController {
     
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
     
     /**
      * 顯示註冊頁面
@@ -79,6 +83,109 @@ public class UserController {
     @GetMapping("/login")
     public String showLoginForm() {
         return "login";
+    }
+    
+    /**
+     * 顯示個人資料頁面
+     */
+    @GetMapping("/users/profile")
+    public String showProfile(Model model) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            return "redirect:/login";
+        }
+        
+        String username = auth.getName();
+        User user = userService.getUserByUsername(username);
+        model.addAttribute("user", user);
+        return "profile";
+    }
+    
+    /**
+     * 更新個人資料
+     */
+    @PostMapping("/users/profile/update")
+    public String updateProfile(
+            @RequestParam String firstName,
+            @RequestParam String lastName,
+            @RequestParam String email,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String address,
+            RedirectAttributes redirectAttributes) {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || !auth.isAuthenticated()) {
+                return "redirect:/login";
+            }
+            
+            String username = auth.getName();
+            User user = userService.getUserByUsername(username);
+            
+            // 創建更新用戶對象
+            User updatedUser = new User();
+            updatedUser.setFirstName(firstName);
+            updatedUser.setLastName(lastName);
+            updatedUser.setEmail(email);
+            updatedUser.setPhone(phone);
+            updatedUser.setAddress(address);
+            
+            userService.updateUser(user.getId(), updatedUser);
+            
+            redirectAttributes.addFlashAttribute("successMessage", "個人資料更新成功！");
+            return "redirect:/users/profile";
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "更新失敗: " + e.getMessage());
+            return "redirect:/users/profile";
+        }
+    }
+    
+    /**
+     * 更新密碼
+     */
+    @PostMapping("/users/profile/change-password")
+    public String changePassword(
+            @RequestParam String currentPassword,
+            @RequestParam String newPassword,
+            @RequestParam String confirmPassword,
+            RedirectAttributes redirectAttributes) {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || !auth.isAuthenticated()) {
+                return "redirect:/login";
+            }
+            
+            String username = auth.getName();
+            User user = userService.getUserByUsername(username);
+            
+            // 驗證當前密碼
+            if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+                redirectAttributes.addFlashAttribute("errorMessage", "當前密碼不正確");
+                return "redirect:/users/profile";
+            }
+            
+            // 驗證新密碼確認
+            if (!newPassword.equals(confirmPassword)) {
+                redirectAttributes.addFlashAttribute("errorMessage", "兩次輸入的新密碼不一致");
+                return "redirect:/users/profile";
+            }
+            
+            // 驗證新密碼長度
+            if (newPassword.length() < 6) {
+                redirectAttributes.addFlashAttribute("errorMessage", "新密碼長度至少為6個字符");
+                return "redirect:/users/profile";
+            }
+            
+            // 更新密碼 - 使用 changePassword 方法
+            userService.changePassword(user.getId(), currentPassword, newPassword);
+            
+            redirectAttributes.addFlashAttribute("successMessage", "密碼修改成功！");
+            return "redirect:/users/profile";
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "密碼修改失敗: " + e.getMessage());
+            return "redirect:/users/profile";
+        }
     }
     
     /**
